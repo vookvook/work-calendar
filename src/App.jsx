@@ -98,12 +98,12 @@ export default function App() {
   padding:"12px",
   boxSizing:"border-box",
   fontFamily:"sans-serif",
-  fontSize:"24px"
+  fontSize:"32px"
 }}>
 
       <h2>2026년 3월 근무시간</h2>
 
-      <div style={{marginBottom:15}}>
+      <div style={{marginBottom:20}}>
         목표 근무시간
         <input
           value={target}
