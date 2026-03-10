@@ -1,3 +1,6 @@
+import React from "react";
+import Calendar from "./Calendar";
+...
 import { useState, useMemo, useEffect } from "react";
 
 export default function Calendar() {
