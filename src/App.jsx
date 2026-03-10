@@ -98,7 +98,7 @@ export default function App() {
   padding:"12px",
   boxSizing:"border-box",
   fontFamily:"sans-serif",
-  fontSize:"18px"
+  fontSize:"24px"
 }}>
 
       <h2>2026년 3월 근무시간</h2>
@@ -165,7 +165,7 @@ export default function App() {
 
               {off && (
                 <div style={{
-                  fontSize:12,
+                  fontSize:20,
                   color:"#999"
                 }}>
                   휴무
@@ -186,7 +186,7 @@ export default function App() {
                   style={{
                     width:70,
                     padding:5,
-                    fontSize:14,
+                    fontSize:20,
                     color:value ? "#2563eb":"black"
                   }}
                 />
@@ -195,7 +195,7 @@ export default function App() {
                   onClick={()=>resetDay(date)}
                   style={{
                     marginLeft:8,
-                    fontSize:12
+                    fontSize:20
                   }}
                 >
                   초기화
