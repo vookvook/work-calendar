@@ -93,11 +93,12 @@ export default function App() {
   return (
 
     <div style={{
-      maxWidth:500,
-      margin:"auto",
-      padding:20,
-      fontFamily:"sans-serif"
-    }}>
+  width:"100%",
+  minHeight:"100vh",
+  padding:"12px",
+  boxSizing:"border-box",
+  fontFamily:"sans-serif"
+}}>
 
       <h2>2026년 3월 근무시간</h2>
 
