@@ -93,41 +93,49 @@ export default function App() {
   return (
 
     <div style={{
-  width:"100%",
-  minHeight:"100vh",
-  padding:"12px",
-  boxSizing:"border-box",
-  fontFamily:"sans-serif",
-  fontSize:"32px"
-}}>
+      width:"100%",
+      minHeight:"100vh",
+      padding:"20px",
+      boxSizing:"border-box",
+      fontFamily:"sans-serif",
+      fontSize:"36px"
+    }}>
 
-      <h2>2026년 3월 근무시간</h2>
+      <h2 style={{marginBottom:20}}>
+        2026년 3월 근무시간
+      </h2>
 
-      <div style={{marginBottom:20}}>
+      <div style={{marginBottom:30}}>
         목표 근무시간
+
         <input
+          type="number"
           value={target}
           onChange={(e)=>setTarget(Number(e.target.value))}
           style={{
-            marginLeft:10,
-            width:80
+            marginLeft:20,
+            width:160,
+            height:60,
+            fontSize:32,
+            padding:"6px 10px"
           }}
         />
       </div>
 
-      <div style={{marginBottom:10}}>
+      <div style={{marginBottom:15}}>
         총 근무시간 <b>{totalWorked.toFixed(2)}</b>
       </div>
 
-      <div style={{marginBottom:20}}>
+      <div style={{marginBottom:30}}>
         남은시간 <b>{remainingHours.toFixed(2)}</b>
       </div>
 
       <button
         onClick={resetAll}
         style={{
-          marginBottom:20,
-          padding:"6px 12px"
+          marginBottom:30,
+          padding:"12px 20px",
+          fontSize:26
         }}
       >
         전체 초기화
@@ -147,9 +155,9 @@ export default function App() {
             key={date}
             style={{
               border:"1px solid #eee",
-              borderRadius:10,
-              padding:12,
-              marginBottom:10,
+              borderRadius:16,
+              padding:"20px",
+              marginBottom:16,
               background: off ? "#f4f4f4":"white",
               display:"flex",
               alignItems:"center",
@@ -159,13 +167,16 @@ export default function App() {
 
             <div>
 
-              <div style={{fontWeight:600}}>
+              <div style={{
+                fontWeight:600,
+                fontSize:32
+              }}>
                 {date}일 ({dayName(date)})
               </div>
 
               {off && (
                 <div style={{
-                  fontSize:20,
+                  fontSize:26,
                   color:"#999"
                 }}>
                   휴무
@@ -176,7 +187,10 @@ export default function App() {
 
             {!off && (
 
-              <div style={{display:"flex",alignItems:"center"}}>
+              <div style={{
+                display:"flex",
+                alignItems:"center"
+              }}>
 
                 <input
                   type="text"
@@ -184,9 +198,12 @@ export default function App() {
                   placeholder={formatTime(dynamicDailyTarget)}
                   onChange={(e)=>handleChange(date,e.target.value)}
                   style={{
-                    width:70,
-                    padding:5,
-                    fontSize:20,
+                    width:140,
+                    height:60,
+                    padding:"8px",
+                    fontSize:30,
+                    borderRadius:8,
+                    border:"1px solid #ccc",
                     color:value ? "#2563eb":"black"
                   }}
                 />
@@ -194,8 +211,9 @@ export default function App() {
                 <button
                   onClick={()=>resetDay(date)}
                   style={{
-                    marginLeft:8,
-                    fontSize:20
+                    marginLeft:12,
+                    fontSize:24,
+                    padding:"8px 12px"
                   }}
                 >
                   초기화
