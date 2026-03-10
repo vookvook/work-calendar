@@ -97,7 +97,8 @@ export default function App() {
   minHeight:"100vh",
   padding:"12px",
   boxSizing:"border-box",
-  fontFamily:"sans-serif"
+  fontFamily:"sans-serif",
+  fontSize:"18px"
 }}>
 
       <h2>2026년 3월 근무시간</h2>
