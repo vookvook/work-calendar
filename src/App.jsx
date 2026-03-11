@@ -12,33 +12,39 @@ export default function App() {
   const daysInMonth = new Date(year,month+1,0).getDate();
   const dates = Array.from({length:daysInMonth},(_,i)=>i+1);
 
-  // 한국 고정 공휴일
+  const monthKey = `${year}-${month+1}`;
+
   const getKoreanHolidays=(y,m)=>{
 
-    const holidays={
-      1:[1],       // 신정
-      3:[1],       // 삼일절
-      5:[5],       // 어린이날
-      6:[6],       // 현충일
-      8:[15],      // 광복절
-      10:[3,9],    // 개천절 / 한글날
-      12:[25]      // 크리스마스
-    };
+    if(y===2026){
 
-    return holidays[m+1] || [];
+      const holidays2026={
+        1:[1],
+        2:[16,17,18],
+        3:[1,2],
+        5:[5,25],
+        6:[3,6],
+        8:[15,17],
+        9:[24,25,26],
+        10:[3,5,9],
+        12:[25]
+      };
+
+      return holidays2026[m+1] || [];
+    }
+
+    return [];
   };
 
-  const holidays=getKoreanHolidays(year,month);
-
-  const monthKey=`${year}-${month+1}`;
+  const holidays = getKoreanHolidays(year,month);
 
   const loadHours=()=>{
-    const saved=localStorage.getItem(`workHours-${monthKey}`);
-    return saved?JSON.parse(saved):{};
+    const saved = localStorage.getItem(`workHours-${monthKey}`);
+    return saved ? JSON.parse(saved) : {};
   };
 
   const loadTarget=()=>{
-    const saved=localStorage.getItem(`target-${monthKey}`);
+    const saved = localStorage.getItem(`target-${monthKey}`);
 
     if(saved!==null) return saved;
 
@@ -88,8 +94,8 @@ export default function App() {
   };
 
   const isWeekend=(date)=>{
-    const day=new Date(year,month,date).getDay();
-    return day===0||day===6;
+    const day = new Date(year,month,date).getDay();
+    return day===0 || day===6;
   };
 
   const isHoliday=(date)=>{
@@ -101,7 +107,7 @@ export default function App() {
     const parts=str.split(":");
     const h=Number(parts[0])||0;
     const m=Number(parts[1])||0;
-    return h+m/60;
+    return h + m/60;
   };
 
   const formatTime=(h)=>{
@@ -111,7 +117,7 @@ export default function App() {
   };
 
   const workingDays=dates.filter(
-    d=>!isWeekend(d)&&!isHoliday(d)
+    d=>!isWeekend(d) && !isHoliday(d)
   );
 
   const enteredDates=Object.keys(hours).map(Number);
@@ -124,12 +130,12 @@ export default function App() {
     .map(parseTime)
     .reduce((a,b)=>a+b,0);
 
-  const remainingHours=
+  const remainingHours =
     target ? target-totalWorked : 0;
 
-  const dynamicDailyTarget=
+  const dynamicDailyTarget =
     remainingWorkingDays.length>0 && target
-      ? remainingHours/remainingWorkingDays.length
+      ? remainingHours / remainingWorkingDays.length
       : 0;
 
   const handleChange=(date,val)=>{
@@ -155,7 +161,7 @@ export default function App() {
     ];
   };
 
-  return(
+  return (
 
     <div style={{
       width:"100%",
@@ -163,17 +169,20 @@ export default function App() {
       padding:"20px",
       boxSizing:"border-box",
       fontFamily:"sans-serif",
-      fontSize:"36px"
+      fontSize:"32px"
     }}>
 
       <div style={{
         display:"flex",
-        alignItems:"center",
         justifyContent:"space-between",
+        alignItems:"center",
         marginBottom:20
       }}>
 
-        <button onClick={prevMonth} style={{fontSize:30}}>
+        <button
+          onClick={prevMonth}
+          style={{fontSize:28}}
+        >
           ◀
         </button>
 
@@ -181,13 +190,17 @@ export default function App() {
           {year}년 {month+1}월 근무시간
         </h2>
 
-        <button onClick={nextMonth} style={{fontSize:30}}>
+        <button
+          onClick={nextMonth}
+          style={{fontSize:28}}
+        >
           ▶
         </button>
 
       </div>
 
-      <div style={{marginBottom:30}}>
+      <div style={{marginBottom:25}}>
+
         목표 근무시간
 
         <input
@@ -197,25 +210,36 @@ export default function App() {
           style={{
             marginLeft:20,
             width:160,
-            height:60,
-            fontSize:32
+            height:55,
+            fontSize:28
           }}
         />
+
       </div>
 
-      <div style={{marginBottom:15}}>
+      <div style={{marginBottom:10}}>
         총 근무시간 <b>{totalWorked.toFixed(2)}</b>
       </div>
 
-      <div style={{marginBottom:30}}>
+      <div style={{marginBottom:25}}>
         남은시간 <b>{remainingHours.toFixed(2)}</b>
       </div>
+
+      <button
+        onClick={resetAll}
+        style={{
+          marginBottom:25,
+          fontSize:24
+        }}
+      >
+        전체 초기화
+      </button>
 
       {dates.map(date=>{
 
         const weekend=isWeekend(date);
         const holiday=isHoliday(date);
-        const off=weekend||holiday;
+        const off = weekend || holiday;
 
         const value=hours[date]||"";
 
@@ -225,10 +249,10 @@ export default function App() {
             key={date}
             style={{
               border:"1px solid #eee",
-              borderRadius:16,
-              padding:"20px",
-              marginBottom:16,
-              background: off ? "#f4f4f4":"white",
+              borderRadius:14,
+              padding:"16px",
+              marginBottom:12,
+              background: off ? "#f3f3f3":"white",
               display:"flex",
               justifyContent:"space-between",
               alignItems:"center"
@@ -237,12 +261,14 @@ export default function App() {
 
             <div>
 
-              <div style={{fontWeight:600}}>
+              <div style={{
+                fontWeight:600
+              }}>
                 {date}일 ({dayName(date)})
               </div>
 
               {holiday && (
-                <div style={{color:"#d00"}}>
+                <div style={{color:"red"}}>
                   공휴일
                 </div>
               )}
@@ -255,9 +281,12 @@ export default function App() {
 
             </div>
 
-            {!off &&(
+            {!off && (
 
-              <div>
+              <div style={{
+                display:"flex",
+                alignItems:"center"
+              }}>
 
                 <input
                   type="text"
@@ -269,7 +298,7 @@ export default function App() {
                   }
                   onChange={(e)=>handleChange(date,e.target.value)}
                   style={{
-                    width:140,
+                    width:130,
                     height:50,
                     fontSize:26
                   }}
@@ -277,7 +306,9 @@ export default function App() {
 
                 <button
                   onClick={()=>resetDay(date)}
-                  style={{marginLeft:10}}
+                  style={{
+                    marginLeft:10
+                  }}
                 >
                   초기화
                 </button>
@@ -293,5 +324,6 @@ export default function App() {
       })}
 
     </div>
+
   );
 }
