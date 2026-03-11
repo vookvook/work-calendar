@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 
 export default function App() {
 
-  // 한국 시간 기준 현재 날짜
   const now = new Date(
     new Date().toLocaleString("en-US",{timeZone:"Asia/Seoul"})
   );
@@ -13,27 +12,46 @@ export default function App() {
   const daysInMonth = new Date(year,month+1,0).getDate();
   const dates = Array.from({length:daysInMonth},(_,i)=>i+1);
 
-  const holidays = [1,2];
+  const holidays=[1,2];
 
-  const savedHours = JSON.parse(localStorage.getItem("workHours")) || {};
-  const savedTarget = localStorage.getItem("target");
+  const monthKey=`${year}-${month+1}`;
 
-  const defaultTarget =
-    year===2026 && month===2 ? 169 : "";
+  const loadHours=()=>{
+    const saved=localStorage.getItem(`workHours-${monthKey}`);
+    return saved?JSON.parse(saved):{};
+  };
 
-  const [target,setTarget] = useState(
-    savedTarget!==null ? savedTarget : defaultTarget
-  );
+  const loadTarget=()=>{
+    const saved=localStorage.getItem(`target-${monthKey}`);
 
-  const [hours,setHours] = useState(savedHours);
+    if(saved!==null) return saved;
+
+    if(year===2026 && month===2) return 169;
+
+    return "";
+  };
+
+  const [hours,setHours]=useState(loadHours);
+  const [target,setTarget]=useState(loadTarget);
 
   useEffect(()=>{
-    localStorage.setItem("workHours",JSON.stringify(hours));
-  },[hours]);
+    setHours(loadHours());
+    setTarget(loadTarget());
+  },[year,month]);
 
   useEffect(()=>{
-    localStorage.setItem("target",target);
-  },[target]);
+    localStorage.setItem(
+      `workHours-${monthKey}`,
+      JSON.stringify(hours)
+    );
+  },[hours,monthKey]);
+
+  useEffect(()=>{
+    localStorage.setItem(
+      `target-${monthKey}`,
+      target
+    );
+  },[target,monthKey]);
 
   const prevMonth=()=>{
     if(month===0){
@@ -121,7 +139,7 @@ export default function App() {
     ];
   };
 
-  return (
+  return(
 
     <div style={{
       width:"100%",
