@@ -12,7 +12,23 @@ export default function App() {
   const daysInMonth = new Date(year,month+1,0).getDate();
   const dates = Array.from({length:daysInMonth},(_,i)=>i+1);
 
-  const holidays=[1,2];
+  // 한국 고정 공휴일
+  const getKoreanHolidays=(y,m)=>{
+
+    const holidays={
+      1:[1],       // 신정
+      3:[1],       // 삼일절
+      5:[5],       // 어린이날
+      6:[6],       // 현충일
+      8:[15],      // 광복절
+      10:[3,9],    // 개천절 / 한글날
+      12:[25]      // 크리스마스
+    };
+
+    return holidays[m+1] || [];
+  };
+
+  const holidays=getKoreanHolidays(year,month);
 
   const monthKey=`${year}-${month+1}`;
 
@@ -157,10 +173,7 @@ export default function App() {
         marginBottom:20
       }}>
 
-        <button
-          onClick={prevMonth}
-          style={{fontSize:30,padding:"8px 16px"}}
-        >
+        <button onClick={prevMonth} style={{fontSize:30}}>
           ◀
         </button>
 
@@ -168,10 +181,7 @@ export default function App() {
           {year}년 {month+1}월 근무시간
         </h2>
 
-        <button
-          onClick={nextMonth}
-          style={{fontSize:30,padding:"8px 16px"}}
-        >
+        <button onClick={nextMonth} style={{fontSize:30}}>
           ▶
         </button>
 
@@ -188,8 +198,7 @@ export default function App() {
             marginLeft:20,
             width:160,
             height:60,
-            fontSize:32,
-            padding:"6px 10px"
+            fontSize:32
           }}
         />
       </div>
@@ -201,17 +210,6 @@ export default function App() {
       <div style={{marginBottom:30}}>
         남은시간 <b>{remainingHours.toFixed(2)}</b>
       </div>
-
-      <button
-        onClick={resetAll}
-        style={{
-          marginBottom:30,
-          padding:"12px 20px",
-          fontSize:26
-        }}
-      >
-        전체 초기화
-      </button>
 
       {dates.map(date=>{
 
@@ -232,37 +230,34 @@ export default function App() {
               marginBottom:16,
               background: off ? "#f4f4f4":"white",
               display:"flex",
-              alignItems:"center",
-              justifyContent:"space-between"
+              justifyContent:"space-between",
+              alignItems:"center"
             }}
           >
 
             <div>
 
-              <div style={{
-                fontWeight:600,
-                fontSize:32
-              }}>
+              <div style={{fontWeight:600}}>
                 {date}일 ({dayName(date)})
               </div>
 
-              {off && (
-                <div style={{
-                  fontSize:26,
-                  color:"#999"
-                }}>
-                  휴무
+              {holiday && (
+                <div style={{color:"#d00"}}>
+                  공휴일
+                </div>
+              )}
+
+              {weekend && (
+                <div style={{color:"#999"}}>
+                  주말
                 </div>
               )}
 
             </div>
 
-            {!off && (
+            {!off &&(
 
-              <div style={{
-                display:"flex",
-                alignItems:"center"
-              }}>
+              <div>
 
                 <input
                   type="text"
@@ -275,22 +270,14 @@ export default function App() {
                   onChange={(e)=>handleChange(date,e.target.value)}
                   style={{
                     width:140,
-                    height:60,
-                    padding:"8px",
-                    fontSize:30,
-                    borderRadius:8,
-                    border:"1px solid #ccc",
-                    color:value ? "#2563eb":"black"
+                    height:50,
+                    fontSize:26
                   }}
                 />
 
                 <button
                   onClick={()=>resetDay(date)}
-                  style={{
-                    marginLeft:12,
-                    fontSize:24,
-                    padding:"8px 12px"
-                  }}
+                  style={{marginLeft:10}}
                 >
                   초기화
                 </button>
@@ -302,6 +289,7 @@ export default function App() {
           </div>
 
         );
+
       })}
 
     </div>
