@@ -1,3 +1,5 @@
+const API_URL = "https://script.google.com/macros/s/AKfycbzahUB2yuRMXTnajkSNbQikk2gZcxNtr7WFc5LTRyknluUZXwy3ab0ZbGpZAEZOq6by/exec";
+
 import { useState, useEffect } from "react";
 
 export default function App() {
@@ -38,42 +40,34 @@ export default function App() {
 
   const holidays = getKoreanHolidays(year,month);
 
-  const loadHours=()=>{
-    const saved = localStorage.getItem(`workHours-${monthKey}`);
-    return saved ? JSON.parse(saved) : {};
+  const [hours,setHours]=useState({});
+  const [target,setTarget]=useState("");
+
+  const loadHours = async ()=>{
+
+    const res = await fetch(`${API_URL}?month=${monthKey}`);
+    const data = await res.json();
+
+    setHours(data);
+
   };
-
-  const loadTarget=()=>{
-    const saved = localStorage.getItem(`target-${monthKey}`);
-
-    if(saved!==null) return saved;
-
-    if(year===2026 && month===2) return 169;
-
-    return "";
-  };
-
-  const [hours,setHours]=useState(loadHours);
-  const [target,setTarget]=useState(loadTarget);
 
   useEffect(()=>{
-    setHours(loadHours());
-    setTarget(loadTarget());
+    loadHours();
   },[year,month]);
 
-  useEffect(()=>{
-    localStorage.setItem(
-      `workHours-${monthKey}`,
-      JSON.stringify(hours)
-    );
-  },[hours,monthKey]);
+  const saveHour = async (date,val)=>{
 
-  useEffect(()=>{
-    localStorage.setItem(
-      `target-${monthKey}`,
-      target
-    );
-  },[target,monthKey]);
+    await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({
+        month:monthKey,
+        date:date,
+        hours:val
+      })
+    });
+
+  };
 
   const prevMonth=()=>{
     if(month===0){
@@ -139,10 +133,14 @@ export default function App() {
       : 0;
 
   const handleChange=(date,val)=>{
+
     setHours({
       ...hours,
       [date]:val
     });
+
+    saveHour(date,val);
+
   };
 
   const resetDay=(date)=>{
@@ -179,10 +177,7 @@ export default function App() {
         marginBottom:20
       }}>
 
-        <button
-          onClick={prevMonth}
-          style={{fontSize:28}}
-        >
+        <button onClick={prevMonth} style={{fontSize:28}}>
           ◀
         </button>
 
@@ -190,10 +185,7 @@ export default function App() {
           {year}년 {month+1}월 근무시간
         </h2>
 
-        <button
-          onClick={nextMonth}
-          style={{fontSize:28}}
-        >
+        <button onClick={nextMonth} style={{fontSize:28}}>
           ▶
         </button>
 
@@ -261,9 +253,7 @@ export default function App() {
 
             <div>
 
-              <div style={{
-                fontWeight:600
-              }}>
+              <div style={{fontWeight:600}}>
                 {date}일 ({dayName(date)})
               </div>
 
@@ -283,10 +273,7 @@ export default function App() {
 
             {!off && (
 
-              <div style={{
-                display:"flex",
-                alignItems:"center"
-              }}>
+              <div style={{display:"flex",alignItems:"center"}}>
 
                 <input
                   type="text"
@@ -306,9 +293,7 @@ export default function App() {
 
                 <button
                   onClick={()=>resetDay(date)}
-                  style={{
-                    marginLeft:10
-                  }}
+                  style={{marginLeft:10}}
                 >
                   초기화
                 </button>
