@@ -60,6 +60,9 @@ export default function App() {
 
     await fetch(API_URL,{
       method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
       body:JSON.stringify({
         month:monthKey,
         date:date,
@@ -287,7 +290,8 @@ export default function App() {
                   style={{
                     width:130,
                     height:50,
-                    fontSize:26
+                    fontSize:26,
+                    color: value ? "#2563eb" : "#000"
                   }}
                 />
 
