@@ -48,7 +48,7 @@ export default function App() {
   }).length;
 
   const diff = Number(target) - totalWorked;
-  const displayDiff = diff > 0 ? diff : 0; // 목표 달성 시 0으로 표시
+  const displayDiff = diff > 0 ? diff : 0;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
   const scrollToToday = () => {
@@ -96,52 +96,45 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
+      {/* 📅 헤더: 상단 고정 기본값 */}
+      <div style={{ position: "sticky", top: 0, zIndex: 1100, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
-      {/* 📊 수정된 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 20px rgba(37, 99, 235, 0.2)" }}>
-          
-          {/* 목표 설정 영역 */}
+        {/* 📊 요약 카드 */}
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 20px rgba(37, 99, 235, 0.2)", marginBottom: "15px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input 
-                type="number" 
-                inputMode="numeric" 
-                value={target} 
-                onChange={e => setTarget(e.target.value)} 
-                style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont }} 
-              />
+              <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont }} />
               <span style={{ fontSize: "18px" }}>h</span>
             </div>
           </div>
-
-          {/* 수치 표시 영역 (누적 / 잔여) */}
           <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>누적 근무</div>
-              <div style={{ fontSize: "36px", fontWeight: "900" }}>
-                {totalWorked.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span>
-              </div>
-            </div>
-            <div style={{ flex: 1, textAlign: "right" }}>
-              <div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div>
-              <div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>
-                {displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span>
-              </div>
-            </div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>누적 근무</div><div style={{ fontSize: "36px", fontWeight: "900" }}>{totalWorked.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
+            <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
           </div>
+        </div>
 
-          {/* 하단 안내 가이드 */}
-          <div style={{ marginTop: "20px", padding: "12px", background: "rgba(0,0,0,0.15)", borderRadius: "12px", fontSize: "14px", textAlign: "center" }}>
-             남은 평일 <span style={{ fontWeight: "bold" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
-          </div>
+        {/* ✨ [핵심 기능] 안내 가이드 Sticky 상단 고정 */}
+        <div style={{ 
+          position: "sticky", 
+          top: "85px", // 헤더 높이에 맞춰 조정
+          zIndex: 1050,
+          marginTop: "10px", 
+          padding: "14px", 
+          background: "#1e293b", // 스크롤 시 리스트와 겹쳐도 잘 보이도록 진한 색상 적용
+          color: "white",
+          borderRadius: "16px", 
+          fontSize: "14px", 
+          textAlign: "center",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          border: "1px solid rgba(255,255,255,0.1)"
+        }}>
+           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
@@ -164,28 +157,13 @@ export default function App() {
           return (
             <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
               <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "8px" }}>
-                <span style={{ fontSize: "24px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>
-                  {date}
-                </span>
-                <span style={{ fontSize: "14px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>
-                  ({dayText})
-                </span>
+                <span style={{ fontSize: "24px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
+                <span style={{ fontSize: "14px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>({dayText})</span>
                 {holiday && <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: "bold", marginLeft: "4px" }}>{holiday}</div>}
               </div>
-
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <input 
-                    type="text"
-                    inputMode="text" 
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    value={hours[date] || ""} 
-                    onChange={e => setHours({ ...hours, [date]: e.target.value })} 
-                    style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} 
-                    placeholder={isPast ? "0" : suggested} 
-                  />
+                  <input type="text" inputMode="text" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} placeholder={isPast ? "0" : suggested} />
                   <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "45px", height: "45px", fontSize: "20px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center" }}>🗑️</button>
                 </div>
               ) : (
@@ -197,7 +175,7 @@ export default function App() {
       </div>
 
       {/* 🔘 하단 고정 버튼 바 */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1000 }}>
+      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1100 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
