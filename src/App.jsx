@@ -15,11 +15,11 @@ export default function App() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // 데이터 불러오기 로직 (캐시 방지 추가)
+  // ✨ 수정된 로드 로직: 모바일 브라우저의 캐시를 강제로 무효화합니다.
   const loadData = useCallback(async () => {
     setLoading(true);
     
-    // 1. 로컬 저장소에서 먼저 읽기
+    // 1. 로컬 저장소 데이터 우선 표시 (새로고침 시 깜빡임 방지)
     const localStr = localStorage.getItem(`work-data-${monthKey}`);
     if (localStr) {
       const localData = JSON.parse(localStr);
@@ -28,11 +28,17 @@ export default function App() {
     }
 
     try {
-      // 2. 구글 시트에서 최신 데이터 가져오기 (?t= 타임스탬프로 캐시 방지)
-      const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
+      // 2. 서버 요청 시 헤더에 캐시 무시 설정 추가
+      const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`, {
+        method: 'GET',
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
+        }
+      });
       const serverData = await res.json();
       
-      // 3. 서버에 유의미한 데이터가 있다면 상태 업데이트 및 로컬 저장
+      // 3. 서버 응답이 유효할 때만 업데이트
       if (serverData && (Object.keys(serverData.hours).length > 0 || serverData.target)) {
         setHours(serverData.hours || {});
         setTarget(serverData.target || "");
@@ -55,10 +61,8 @@ export default function App() {
     const body = { month: monthKey, target, hours };
     
     try {
-      // 로컬 스토리지에 즉시 반영
       localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(body));
       
-      // 구글 시트로 전송
       await fetch(API_URL, {
         method: "POST",
         mode: "no-cors", 
@@ -73,7 +77,6 @@ export default function App() {
     }
   };
 
-  // 헬퍼 함수
   const parseTime = (str) => {
     if (!str || typeof str !== 'string' || !str.includes(':')) return Number(str) || 0;
     const [h, m] = str.split(":").map(Number);
@@ -124,9 +127,7 @@ export default function App() {
       <button 
         onClick={saveAll} 
         disabled={loading}
-        style={{ width: "100%", height: "60px", marginTop: "20px", backgroundColor: "#2563eb", color: "white", border: "none", borderRadius: "12px", fontSize: "20px", fontWeight: "bold", cursor: "pointer", transition: "0.2s" }}
-        onMouseOver={e => e.target.style.backgroundColor = "#1d4ed8"}
-        onMouseOut={e => e.target.style.backgroundColor = "#2563eb"}
+        style={{ width: "100%", height: "60px", marginTop: "20px", backgroundColor: "#2563eb", color: "white", border: "none", borderRadius: "12px", fontSize: "20px", fontWeight: "bold", cursor: "pointer" }}
       >
         {loading ? "데이터 처리 중..." : "구글 시트에 저장하기"}
       </button>
