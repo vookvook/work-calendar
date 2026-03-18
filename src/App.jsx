@@ -96,16 +96,16 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더: Sticky 해제 (스크롤 시 같이 올라감) */}
+      {/* 📅 헤더: 스크롤 시 위로 올라감 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
+      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        {/* 📊 요약 카드 */}
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 20px rgba(37, 99, 235, 0.2)", marginBottom: "15px" }}>
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "5px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -118,24 +118,21 @@ export default function App() {
             <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
           </div>
         </div>
+      </div>
 
-        {/* ✨ [수정된 부분] 안내 가이드만 최상단(top: 0) Sticky 고정 */}
-        <div style={{ 
-          position: "sticky", 
-          top: "0", 
-          zIndex: 1100,
-          marginTop: "10px", 
-          padding: "14px", 
-          background: "#1e293b", 
-          color: "white",
-          borderRadius: "16px", 
-          fontSize: "14px", 
-          textAlign: "center",
-          boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
-          border: "1px solid rgba(255,255,255,0.1)"
-        }}>
-           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
-        </div>
+      {/* ✨ [핵심 수정] 안내 가이드 Sticky: 화면 최상단 고정 */}
+      <div style={{ 
+        position: "sticky", 
+        top: "0", 
+        zIndex: 2000, 
+        backgroundColor: "#1e293b", 
+        color: "white", 
+        padding: "16px 24px", 
+        fontSize: "15px", 
+        textAlign: "center",
+        borderBottom: "1px solid rgba(255,255,255,0.1)" 
+      }}>
+         남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
       </div>
 
       {/* 📝 날짜 리스트 */}
@@ -175,7 +172,7 @@ export default function App() {
       </div>
 
       {/* 🔘 하단 고정 버튼 바 */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1200 }}>
+      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 2000 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
