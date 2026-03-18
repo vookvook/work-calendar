@@ -1,6 +1,6 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyL9L3UyIrYeOSqIS9VB9eiNp_mYBhrFIFguJ2TBagzx91WCQDkzqnl5zhxAYyh1Bo6/exec";
-
 import { useState, useEffect } from "react";
+
+const API_URL = "https://script.google.com/macros/s/AKfycbzv-Z8Ntv6mrGDSBuVwC4ixq-kuAFif6yK7rU90xRQD18t4UH4NcpBZgv8zTm-5WX4/exec";
 
 export default function App() {
 
@@ -17,9 +17,7 @@ export default function App() {
   const monthKey = `${year}-${month+1}`;
 
   const getKoreanHolidays=(y,m)=>{
-
     if(y===2026){
-
       const holidays2026={
         1:[1],
         2:[16,17,18],
@@ -31,10 +29,8 @@ export default function App() {
         10:[3,5,9],
         12:[25]
       };
-
       return holidays2026[m+1] || [];
     }
-
     return [];
   };
 
@@ -43,33 +39,40 @@ export default function App() {
   const [hours,setHours]=useState({});
   const [target,setTarget]=useState("");
 
+  // 데이터 불러오기
   const loadHours = async ()=>{
-
     const res = await fetch(`${API_URL}?month=${monthKey}`);
     const data = await res.json();
 
-    setHours(data);
-
+    setHours(data.hours || {});
+    setTarget(data.target || "");
   };
 
   useEffect(()=>{
     loadHours();
   },[year,month]);
 
-  const saveHour = async (date,val)=>{
+  // 저장 (버튼)
+  const saveAll = async ()=>{
 
-    await fetch(API_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        month:monthKey,
-        date:date,
-        hours:val
-      })
-    });
+    const entries = Object.entries(hours);
 
+    for (const [date, val] of entries) {
+      await fetch(API_URL,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          month:monthKey,
+          date:date,
+          hours:val,
+          target:target
+        })
+      });
+    }
+
+    alert("저장 완료!");
   };
 
   const prevMonth=()=>{
@@ -135,17 +138,6 @@ export default function App() {
       ? remainingHours / remainingWorkingDays.length
       : 0;
 
-  const handleChange=(date,val)=>{
-
-    setHours({
-      ...hours,
-      [date]:val
-    });
-
-    saveHour(date,val);
-
-  };
-
   const resetDay=(date)=>{
     const copy={...hours};
     delete copy[date];
@@ -195,9 +187,7 @@ export default function App() {
       </div>
 
       <div style={{marginBottom:25}}>
-
         목표 근무시간
-
         <input
           type="number"
           value={target}
@@ -209,7 +199,6 @@ export default function App() {
             fontSize:28
           }}
         />
-
       </div>
 
       <div style={{marginBottom:10}}>
@@ -286,7 +275,14 @@ export default function App() {
                       ? formatTime(dynamicDailyTarget)
                       : ""
                   }
-                  onChange={(e)=>handleChange(date,e.target.value)}
+                  onChange={(e)=>{
+                    const val = e.target.value;
+
+                    setHours(prev => ({
+                      ...prev,
+                      [date]: val
+                    }));
+                  }}
                   style={{
                     width:130,
                     height:50,
@@ -312,7 +308,22 @@ export default function App() {
 
       })}
 
-    </div>
+      <button
+        onClick={saveAll}
+        style={{
+          width:"100%",
+          height:"70px",
+          fontSize:"28px",
+          marginTop:"30px",
+          background:"#2563eb",
+          color:"white",
+          border:"none",
+          borderRadius:"12px"
+        }}
+      >
+        저장하기
+      </button>
 
+    </div>
   );
 }
