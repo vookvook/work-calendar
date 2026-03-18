@@ -96,8 +96,8 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더: 상단 고정 기본값 */}
-      <div style={{ position: "sticky", top: 0, zIndex: 1100, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
+      {/* 📅 헤더: Sticky 해제 (스크롤 시 같이 올라감) */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
@@ -119,19 +119,19 @@ export default function App() {
           </div>
         </div>
 
-        {/* ✨ [핵심 기능] 안내 가이드 Sticky 상단 고정 */}
+        {/* ✨ [수정된 부분] 안내 가이드만 최상단(top: 0) Sticky 고정 */}
         <div style={{ 
           position: "sticky", 
-          top: "85px", // 헤더 높이에 맞춰 조정
-          zIndex: 1050,
+          top: "0", 
+          zIndex: 1100,
           marginTop: "10px", 
           padding: "14px", 
-          background: "#1e293b", // 스크롤 시 리스트와 겹쳐도 잘 보이도록 진한 색상 적용
+          background: "#1e293b", 
           color: "white",
           borderRadius: "16px", 
           fontSize: "14px", 
           textAlign: "center",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
           border: "1px solid rgba(255,255,255,0.1)"
         }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
@@ -175,7 +175,7 @@ export default function App() {
       </div>
 
       {/* 🔘 하단 고정 버튼 바 */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1100 }}>
+      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1200 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
