@@ -153,20 +153,20 @@ export default function App() {
       </div>
 
       {/* 🔘 하단 고정 버튼 바 (거대 사이즈) */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px", boxSizing: "border-box", background: "white", borderTop: "2px solid #e2e8f0", gap: "15px", zIndex: 1000 }}>
+      <div style={{ position: "fixed", bottom: "0", left: "24", width: "100%", display: "flex", padding: "40px", boxSizing: "border-box", background: "white", borderTop: "2px solid #e2e8f0", gap: "32px", zIndex: 1000 }}>
         <button 
           onClick={fetchFromServer}
           disabled={loading}
-          style={{ width: "90px", height: "90px", fontSize: "36px", backgroundColor: "white", border: "3px solid #e2e8f0", borderRadius: "25px", display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ width: "120px", height: "120px", fontSize: "50px", backgroundColor: "white", border: "3px solid #e2e8f0", borderRadius: "24px", display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           {loading ? "..." : "🔄"}
         </button>
         <button 
           onClick={saveAll} 
           disabled={loading}
-          style={{ flex: 1, height: "90px", backgroundColor: "#1e293b", color: "white", fontSize: "28px", fontWeight: "900", borderRadius: "25px", border: "none", boxShadow: "0 10px 20px rgba(0,0,0,0.15)" }}
+          style={{ flex: 1, height: "120px", backgroundColor: "#1e293b", color: "white", fontSize: "40px", fontWeight: "900", borderRadius: "24px", border: "none", boxShadow: "0 10px 20px rgba(0,0,0,0.15)" }}
         >
-          {loading ? "기록 중" : "서버에 기록 저장"}
+          {loading ? "기록 중" : "저장하기"}
         </button>
       </div>
 
