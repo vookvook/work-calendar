@@ -35,17 +35,14 @@ export default function App() {
     return (h || 0) + (m || 0) / 60;
   };
 
-  // 💡 [핵심 로직] 남은 평일 수 및 권장 시간 계산
   const totalWorked = Object.values(hours).reduce((a, b) => a + parseTime(b), 0);
   const todayDate = new Date().getDate();
   const isCurrentMonth = new Date().getFullYear() === year && new Date().getMonth() === month;
 
   const remainingWeekdays = dates.filter(d => {
-    // 오늘 이후이거나 오늘인 날짜 중
     if (isCurrentMonth && d < todayDate) return false;
     const dayNum = new Date(year, month, d).getDay();
     const holiday = getHolidayName(d);
-    // 주말이 아니고 공휴일이 아니며, 아직 시간을 입력하지 않은 날
     return dayNum !== 0 && dayNum !== 6 && !holiday && !hours[d];
   }).length;
 
@@ -97,28 +94,28 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 40px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
+      {/* 📅 헤더: 패딩 24px */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
-      {/* 📊 요약 카드 */}
-      <div style={{ padding: "15px 40px" }}>
+      {/* 📊 요약 카드: 패딩 24px */}
+      <div style={{ padding: "15px 24px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 20px", borderRadius: "20px", color: "white", boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
             <span style={{ fontSize: "18px", fontWeight: "bold" }}>목표 시간</span>
-            <input type="number" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px", fontFamily: pretendardFont }} />
+            <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px", fontFamily: pretendardFont }} />
           </div>
           <div style={{ fontSize: "48px", fontWeight: "900", lineHeight: 1 }}>{totalWorked.toFixed(1)}<span style={{ fontSize: "18px", fontWeight: "400", marginLeft: "5px" }}>h</span></div>
-          <div style={{ fontSize: "16px", marginTop: "10px", opacity: 0.9 }}>
-            남은 평일 {remainingWeekdays}일 | 하루 <span style={{ fontWeight: "bold", borderBottom: "2px solid white" }}>{suggested}h</span> 필요
+          <div style={{ fontSize: "15px", marginTop: "12px", opacity: 0.9 }}>
+             남은 평일 {remainingWeekdays}일 | 하루 <span style={{ fontWeight: "bold", borderBottom: "2px solid white" }}>{suggested}h</span> 필요
           </div>
         </div>
       </div>
 
-      {/* 📝 날짜 리스트 */}
+      {/* 📝 날짜 리스트: 패딩 24px */}
       <div style={{ backgroundColor: "white" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
@@ -128,7 +125,7 @@ export default function App() {
           const isPast = isCurrentMonth && date < todayDate;
 
           return (
-            <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 40px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
+            <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
               <div style={{ flex: 1 }}>
                 <span style={{ fontSize: "24px", fontWeight: "800", color: holiday || dayNum === 0 ? "#ef4444" : dayNum === 6 ? "#3b82f6" : "#1e293b", opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
                 {holiday && <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: "bold" }}>{holiday}</div>}
@@ -137,12 +134,14 @@ export default function App() {
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <input 
-                    type="text" 
-                    inputMode="decimal" 
+                    type="text"
+                    inputMode="text" 
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                     value={hours[date] || ""} 
                     onChange={e => setHours({ ...hours, [date]: e.target.value })} 
                     style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} 
-                    // ✨ 0:00 대신 권장 시간 표시
                     placeholder={isPast ? "0" : suggested} 
                   />
                   <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "45px", height: "45px", fontSize: "20px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center" }}>🗑️</button>
@@ -155,8 +154,8 @@ export default function App() {
         })}
       </div>
 
-      {/* 🔘 하단 버튼 */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 40px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1000 }}>
+      {/* 🔘 하단 고정 버튼 바: 패딩 24px */}
+      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1000 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
