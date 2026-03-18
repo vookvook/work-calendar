@@ -89,7 +89,7 @@ export default function App() {
       {/* 📅 헤더: 월 선택 (초대형) */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "30px 20px", backgroundColor: "white", borderBottom: "2px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "40px", background: "none", border: "none" }}>◀</button>
-        <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0 }}>{year}. {month + 1}</h1>
+        <h1 style={{ fontSize: "40px", fontWeight: "900", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "40px", background: "none", border: "none" }}>▶</button>
       </div>
 
