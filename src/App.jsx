@@ -101,9 +101,9 @@ export default function App() {
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
+      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        {/* 📊 요약 카드 */}
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "15px" }}>
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "5px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -116,23 +116,20 @@ export default function App() {
             <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
           </div>
         </div>
+      </div>
 
-        {/* ✨ [핵심 수정] 마이너스 마진을 이용해 부모 패딩을 뚫고 꽉 채우기 */}
+      {/* ✨ [핵심 수정] 독립된 부모 요소로 분리하여 Sticky 확실하게 보장 */}
+      <div style={{ position: "sticky", top: "0", zIndex: 2000, width: "100%", backgroundColor: "#f8fafc" }}>
         <div style={{ 
-          position: "sticky", 
-          top: "0", 
-          zIndex: 2000, 
           backgroundColor: "#1e293b", 
           color: "white", 
-          marginLeft: "-24px",  // 부모 왼쪽 패딩 무시
-          marginRight: "-24px", // 부모 오른쪽 패딩 무시
           padding: "16px 24px", 
           fontSize: "15px", 
           textAlign: "center",
           boxShadow: "none",
           borderBottom: "1px solid rgba(255,255,255,0.1)" 
         }}>
-           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료 👏🏻
+           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
