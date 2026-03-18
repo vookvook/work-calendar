@@ -10,14 +10,13 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   
   const todayRef = useRef(null);
+  const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
   const monthKey = `${year}-${month + 1}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
-
-  // 🇰🇷 2026년 공휴일 로직
+  // 🇰🇷 2026년 공휴일 로직 (유지)
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
     const mmdd = `${month + 1}-${d}`;
@@ -38,10 +37,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    // 💡 수평 스크롤 완전 방지를 위한 스타일 강제 적용
-    document.documentElement.style.overflowX = "hidden";
-    document.body.style.overflowX = "hidden";
+    // 💡 화면 흔들림 방지 핵심 스타일
     document.body.style.margin = "0";
+    document.body.style.padding = "0";
+    document.body.style.overflowX = "hidden"; // 가로축 숨김
+    document.documentElement.style.touchAction = "pan-y"; // y축 스크롤만 허용
     
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
@@ -87,9 +87,17 @@ export default function App() {
   const totalWorked = Object.values(hours).reduce((a, b) => a + parseTime(b), 0);
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "180px", boxSizing: "border-box", overflowX: "hidden", fontFamily: pretendardFont }}>
+    <div style={{ 
+      width: "100%", 
+      minHeight: "100vh", 
+      backgroundColor: "#f8fafc", 
+      paddingBottom: "180px", 
+      boxSizing: "border-box", 
+      fontFamily: pretendardFont,
+      position: "relative" 
+    }}>
       
-      {/* 📅 헤더 */}
+      {/* 📅 헤더 (패딩 40 유지) */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "50px 40px", backgroundColor: "white", borderBottom: "3px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "50px", background: "none", border: "none", fontFamily: pretendardFont }}>◀</button>
         <h1 style={{ fontSize: "50px", fontWeight: "900", margin: 0 }}>{year}. {month + 1}</h1>
@@ -109,7 +117,7 @@ export default function App() {
       </div>
 
       {/* 📝 날짜 리스트 */}
-      <div style={{ backgroundColor: "white", width: "100%" }}>
+      <div style={{ backgroundColor: "white" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
           const dayNum = new Date(year, month, date).getDay();
@@ -126,11 +134,7 @@ export default function App() {
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                   <input type="text" inputMode="decimal" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "160px", height: "90px", fontSize: "40px", textAlign: "right", border: "4px solid #e2e8f0", borderRadius: "20px", padding: "0 20px", outline: "none", fontFamily: pretendardFont }} placeholder="0:00" />
-                  {/* ✨ 쓰레기통 아이콘으로 변경 */}
-                  <button 
-                    onClick={() => setHours({ ...hours, [date]: "" })} 
-                    style={{ width: "80px", height: "90px", fontSize: "36px", background: "#fef2f2", border: "2px solid #fee2e2", borderRadius: "20px", color: "#ef4444", fontFamily: pretendardFont }}
-                  >
+                  <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "80px", height: "90px", fontSize: "36px", background: "#fef2f2", border: "2px solid #fee2e2", borderRadius: "20px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: pretendardFont }}>
                     🗑️
                   </button>
                 </div>
