@@ -11,13 +11,11 @@ export default function App() {
   
   const todayRef = useRef(null);
   const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
   const monthKey = `${year}-${month + 1}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-  // 요일 한글 배열
-  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
@@ -50,6 +48,7 @@ export default function App() {
   }).length;
 
   const diff = Number(target) - totalWorked;
+  const displayDiff = diff > 0 ? diff : 0; // 목표 달성 시 0으로 표시
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
   const scrollToToday = () => {
@@ -104,16 +103,44 @@ export default function App() {
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
-      {/* 📊 요약 카드 */}
+      {/* 📊 수정된 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 20px", borderRadius: "20px", color: "white", boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <span style={{ fontSize: "18px", fontWeight: "bold" }}>목표 시간</span>
-            <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px", fontFamily: pretendardFont }} />
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 20px rgba(37, 99, 235, 0.2)" }}>
+          
+          {/* 목표 설정 영역 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
+            <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="number" 
+                inputMode="numeric" 
+                value={target} 
+                onChange={e => setTarget(e.target.value)} 
+                style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont }} 
+              />
+              <span style={{ fontSize: "18px" }}>h</span>
+            </div>
           </div>
-          <div style={{ fontSize: "48px", fontWeight: "900", lineHeight: 1 }}>{totalWorked.toFixed(1)}<span style={{ fontSize: "18px", fontWeight: "400", marginLeft: "5px" }}>h</span></div>
-          <div style={{ fontSize: "15px", marginTop: "12px", opacity: 0.9 }}>
-             남은 평일 {remainingWeekdays}일 | 하루 <span style={{ fontWeight: "bold", borderBottom: "2px solid white" }}>{suggested}h</span> 필요
+
+          {/* 수치 표시 영역 (누적 / 잔여) */}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>누적 근무</div>
+              <div style={{ fontSize: "36px", fontWeight: "900" }}>
+                {totalWorked.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span>
+              </div>
+            </div>
+            <div style={{ flex: 1, textAlign: "right" }}>
+              <div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div>
+              <div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>
+                {displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 하단 안내 가이드 */}
+          <div style={{ marginTop: "20px", padding: "12px", background: "rgba(0,0,0,0.15)", borderRadius: "12px", fontSize: "14px", textAlign: "center" }}>
+             남은 평일 <span style={{ fontWeight: "bold" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
           </div>
         </div>
       </div>
@@ -128,11 +155,10 @@ export default function App() {
           const isToday = new Date().getDate() === date && new Date().getMonth() === month && new Date().getFullYear() === year;
           const isPast = isCurrentMonth && date < todayDate;
 
-          // 요일별 색상 결정
           const getDayColor = () => {
-            if (holiday || dayNum === 0) return "#ef4444"; // 일요일/공휴일 빨강
-            if (dayNum === 6) return "#3b82f6"; // 토요일 파랑
-            return "#1e293b"; // 평일
+            if (holiday || dayNum === 0) return "#ef4444";
+            if (dayNum === 6) return "#3b82f6";
+            return "#1e293b";
           };
 
           return (
@@ -141,7 +167,6 @@ export default function App() {
                 <span style={{ fontSize: "24px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>
                   {date}
                 </span>
-                {/* ✨ 요일 표시 추가 */}
                 <span style={{ fontSize: "14px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>
                   ({dayText})
                 </span>
