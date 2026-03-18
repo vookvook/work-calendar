@@ -1,329 +1,136 @@
 import { useState, useEffect } from "react";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzv-Z8Ntv6mrGDSBuVwC4ixq-kuAFif6yK7rU90xRQD18t4UH4NcpBZgv8zTm-5WX4/exec";
+// 배포 후 받은 새로운 URL로 교체하세요!
+const API_URL = "https://script.google.com/macros/s/AKfycbzkk_CFCf3IwJ9D3JEi8kHlpkGd1sv3taHjpyzoshiegFRoDZE2NSrmMx2c0JDxq9Bi/exec";
 
 export default function App() {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth());
+  const [hours, setHours] = useState({});
+  const [target, setTarget] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const now = new Date(
-    new Date().toLocaleString("en-US",{timeZone:"Asia/Seoul"})
-  );
+  const monthKey = `${year}-${month + 1}`;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  const [year,setYear] = useState(now.getFullYear());
-  const [month,setMonth] = useState(now.getMonth());
-
-  const daysInMonth = new Date(year,month+1,0).getDate();
-  const dates = Array.from({length:daysInMonth},(_,i)=>i+1);
-
-  const monthKey = `${year}-${month+1}`;
-
-  const getKoreanHolidays=(y,m)=>{
-    if(y===2026){
-      const holidays2026={
-        1:[1],
-        2:[16,17,18],
-        3:[1,2],
-        5:[5,25],
-        6:[3,6],
-        8:[15,17],
-        9:[24,25,26],
-        10:[3,5,9],
-        12:[25]
+  // 2026년 공휴일 데이터
+  const getKoreanHolidays = (y, m) => {
+    if (y === 2026) {
+      const holidays2026 = {
+        1: [1], 2: [16, 17, 18], 3: [1, 2], 5: [5, 25],
+        6: [3, 6], 8: [15, 17], 9: [24, 25, 26], 10: [3, 5, 9], 12: [25]
       };
-      return holidays2026[m+1] || [];
+      return holidays2026[m + 1] || [];
     }
     return [];
   };
-
-  const holidays = getKoreanHolidays(year,month);
-
-  const [hours,setHours]=useState({});
-  const [target,setTarget]=useState("");
+  const holidays = getKoreanHolidays(year, month);
 
   // 데이터 불러오기
-  const loadHours = async ()=>{
-    const res = await fetch(`${API_URL}?month=${monthKey}`);
-    const data = await res.json();
-
-    setHours(data.hours || {});
-    setTarget(data.target || "");
+  const loadHours = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}?month=${monthKey}`);
+      const data = await res.json();
+      setHours(data.hours || {});
+      setTarget(data.target || "");
+    } catch (e) {
+      console.error("불러오기 실패", e);
+    }
+    setLoading(false);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     loadHours();
-  },[year,month]);
+  }, [year, month]);
 
-  // 저장 (버튼)
-  const saveAll = async ()=>{
-
-    const entries = Object.entries(hours);
-
-    for (const [date, val] of entries) {
-      await fetch(API_URL,{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          month:monthKey,
-          date:date,
-          hours:val,
-          target:target
-        })
+  // ✨ 핵심 수정: 모든 데이터를 한 번에 전송
+  const saveAll = async () => {
+    setLoading(true);
+    try {
+      // GAS POST 요청은 'no-cors'를 쓰면 응답 확인이 안 되므로 
+      // 기본 fetch를 쓰되, 서버에서 JSON 응답을 잘 주도록 구성해야 함
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          month: monthKey,
+          target: target,
+          hours: hours
+        }),
       });
+      alert("성공적으로 저장되었습니다!");
+    } catch (error) {
+      alert("저장 중 오류가 발생했습니다.");
     }
-
-    alert("저장 완료!");
+    setLoading(false);
   };
 
-  const prevMonth=()=>{
-    if(month===0){
-      setMonth(11);
-      setYear(year-1);
-    }else{
-      setMonth(month-1);
-    }
+  // 헬퍼 함수들
+  const isWeekend = (d) => [0, 6].includes(new Date(year, month, d).getDay());
+  const isHoliday = (d) => holidays.includes(d);
+  const parseTime = (str) => {
+    if (!str || typeof str !== 'string' || !str.includes(':')) return Number(str) || 0;
+    const [h, m] = str.split(":").map(Number);
+    return h + (m || 0) / 60;
+  };
+  const formatTime = (h) => {
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    return `${hh}:${mm.toString().padStart(2, "0")}`;
   };
 
-  const nextMonth=()=>{
-    if(month===11){
-      setMonth(0);
-      setYear(year+1);
-    }else{
-      setMonth(month+1);
-    }
-  };
-
-  const isWeekend=(date)=>{
-    const day = new Date(year,month,date).getDay();
-    return day===0 || day===6;
-  };
-
-  const isHoliday=(date)=>{
-    return holidays.includes(date);
-  };
-
-  const parseTime=(str)=>{
-    if(!str) return 0;
-    const parts=str.split(":");
-    const h=Number(parts[0])||0;
-    const m=Number(parts[1])||0;
-    return h + m/60;
-  };
-
-  const formatTime=(h)=>{
-    const hh=Math.floor(h);
-    const mm=Math.round((h-hh)*60);
-    return `${hh}:${mm.toString().padStart(2,"0")}`;
-  };
-
-  const workingDays=dates.filter(
-    d=>!isWeekend(d) && !isHoliday(d)
-  );
-
-  const enteredDates=Object.keys(hours).map(Number);
-
-  const remainingWorkingDays=workingDays.filter(
-    d=>!enteredDates.includes(d)
-  );
-
-  const totalWorked=Object.values(hours)
-    .map(parseTime)
-    .reduce((a,b)=>a+b,0);
-
-  const remainingHours =
-    target ? target-totalWorked : 0;
-
-  const dynamicDailyTarget =
-    remainingWorkingDays.length>0 && target
-      ? remainingHours / remainingWorkingDays.length
-      : 0;
-
-  const resetDay=(date)=>{
-    const copy={...hours};
-    delete copy[date];
-    setHours(copy);
-  };
-
-  const resetAll=()=>{
-    setHours({});
-  };
-
-  const dayName=(date)=>{
-    return ["일","월","화","수","목","금","토"][
-      new Date(year,month,date).getDay()
-    ];
-  };
+  const totalWorked = Object.values(hours).reduce((a, b) => a + parseTime(b), 0);
+  const remainingHours = target ? target - totalWorked : 0;
+  const workingDays = dates.filter(d => !isWeekend(d) && !isHoliday(d));
+  const enteredDates = Object.keys(hours).map(Number);
+  const remainingWorkingDays = workingDays.filter(d => !enteredDates.includes(d));
+  const dynamicDailyTarget = remainingWorkingDays.length > 0 && target ? remainingHours / remainingWorkingDays.length : 0;
 
   return (
-
-    <div style={{
-      width:"100%",
-      minHeight:"100vh",
-      padding:"20px",
-      boxSizing:"border-box",
-      fontFamily:"sans-serif",
-      fontSize:"32px"
-    }}>
-
-      <div style={{
-        display:"flex",
-        justifyContent:"space-between",
-        alignItems:"center",
-        marginBottom:20
-      }}>
-
-        <button onClick={prevMonth} style={{fontSize:28}}>
-          ◀
-        </button>
-
-        <h2>
-          {year}년 {month+1}월 근무시간
-        </h2>
-
-        <button onClick={nextMonth} style={{fontSize:28}}>
-          ▶
-        </button>
-
+    <div style={{ width: "100%", maxWidth: "600px", margin: "0 auto", padding: "20px", fontSize: "24px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)}>◀</button>
+        <h2>{year}년 {month + 1}월</h2>
+        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)}>▶</button>
       </div>
 
-      <div style={{marginBottom:25}}>
-        목표 근무시간
-        <input
-          type="number"
-          value={target}
-          onChange={(e)=>setTarget(e.target.value)}
-          style={{
-            marginLeft:20,
-            width:160,
-            height:55,
-            fontSize:28
-          }}
-        />
+      <div style={{ margin: "20px 0" }}>
+        목표 시간: 
+        <input type="number" value={target} onChange={(e) => setTarget(e.target.value)} style={{ marginLeft: "10px", fontSize: "20px", width: "100px" }} />
       </div>
 
-      <div style={{marginBottom:10}}>
-        총 근무시간 <b>{totalWorked.toFixed(2)}</b>
+      <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", marginBottom: "20px" }}>
+        <div>총 근무: <b>{totalWorked.toFixed(2)}h</b></div>
+        <div>남은 시간: <b style={{ color: "red" }}>{remainingHours.toFixed(2)}h</b></div>
       </div>
 
-      <div style={{marginBottom:25}}>
-        남은시간 <b>{remainingHours.toFixed(2)}</b>
-      </div>
-
-      <button
-        onClick={resetAll}
-        style={{
-          marginBottom:25,
-          fontSize:24
-        }}
-      >
-        전체 초기화
-      </button>
-
-      {dates.map(date=>{
-
-        const weekend=isWeekend(date);
-        const holiday=isHoliday(date);
-        const off = weekend || holiday;
-
-        const value=hours[date]||"";
-
-        return(
-
-          <div
-            key={date}
-            style={{
-              border:"1px solid #eee",
-              borderRadius:14,
-              padding:"16px",
-              marginBottom:12,
-              background: off ? "#f3f3f3":"white",
-              display:"flex",
-              justifyContent:"space-between",
-              alignItems:"center"
-            }}
-          >
-
-            <div>
-
-              <div style={{fontWeight:600}}>
-                {date}일 ({dayName(date)})
-              </div>
-
-              {holiday && (
-                <div style={{color:"red"}}>
-                  공휴일
-                </div>
-              )}
-
-              {weekend && (
-                <div style={{color:"#999"}}>
-                  주말
-                </div>
-              )}
-
-            </div>
-
+      {dates.map(date => {
+        const off = isWeekend(date) || isHoliday(date);
+        return (
+          <div key={date} style={{ display: "flex", justifyContent: "space-between", padding: "10px", borderBottom: "1px solid #eee", background: off ? "#f9f9f9" : "white" }}>
+            <span>{date}일 ({["일", "월", "화", "수", "목", "금", "토"][new Date(year, month, date).getDay()]})</span>
             {!off && (
-
-              <div style={{display:"flex",alignItems:"center"}}>
-
-                <input
-                  type="text"
-                  value={value}
-                  placeholder={
-                    dynamicDailyTarget
-                      ? formatTime(dynamicDailyTarget)
-                      : ""
-                  }
-                  onChange={(e)=>{
-                    const val = e.target.value;
-
-                    setHours(prev => ({
-                      ...prev,
-                      [date]: val
-                    }));
-                  }}
-                  style={{
-                    width:130,
-                    height:50,
-                    fontSize:26,
-                    color: value ? "#2563eb" : "#000"
-                  }}
-                />
-
-                <button
-                  onClick={()=>resetDay(date)}
-                  style={{marginLeft:10}}
-                >
-                  초기화
-                </button>
-
-              </div>
-
+              <input 
+                type="text" 
+                value={hours[date] || ""} 
+                placeholder={formatTime(dynamicDailyTarget)}
+                onChange={(e) => setHours({ ...hours, [date]: e.target.value })}
+                style={{ width: "80px", textAlign: "center" }}
+              />
             )}
-
           </div>
-
         );
-
       })}
 
-      <button
-        onClick={saveAll}
-        style={{
-          width:"100%",
-          height:"70px",
-          fontSize:"28px",
-          marginTop:"30px",
-          background:"#2563eb",
-          color:"white",
-          border:"none",
-          borderRadius:"12px"
-        }}
+      <button 
+        onClick={saveAll} 
+        disabled={loading}
+        style={{ width: "100%", height: "60px", marginTop: "20px", background: "#2563eb", color: "white", borderRadius: "10px", fontSize: "20px", cursor: "pointer" }}
       >
-        저장하기
+        {loading ? "저장 중..." : "구글 시트에 저장하기"}
       </button>
-
     </div>
   );
 }
