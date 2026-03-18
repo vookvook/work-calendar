@@ -96,7 +96,7 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더: 스크롤 시 위로 올라감 */}
+      {/* 📅 헤더 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
@@ -105,7 +105,7 @@ export default function App() {
 
       {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "5px" }}>
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -120,14 +120,15 @@ export default function App() {
         </div>
       </div>
 
-      {/* ✨ [핵심 수정] 안내 가이드 Sticky: 화면 최상단 고정 */}
+      {/* ✨ [수정] 안내 가이드 Sticky: 가이드 박스를 화면 좌우 끝까지 꽉 채움 */}
       <div style={{ 
         position: "sticky", 
         top: "0", 
         zIndex: 2000, 
         backgroundColor: "#1e293b", 
         color: "white", 
-        padding: "16px 24px", 
+        width: "100%", // 가로 꽉 채우기
+        padding: "16px 0", // 내부 상하 패딩만 유지
         fontSize: "15px", 
         textAlign: "center",
         borderBottom: "1px solid rgba(255,255,255,0.1)" 
