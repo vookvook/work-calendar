@@ -22,11 +22,9 @@ export default function App() {
     const mmdd = `${month + 1}-${d}`;
     const fixed = { "1-1": "신정", "3-1": "삼일절", "5-5": "어린이날", "6-3": "지방선거", "6-6": "현충일", "8-15": "광복절", "10-3": "개천절", "10-9": "한글날", "12-25": "성탄절" };
     if (fixed[mmdd]) return fixed[mmdd];
-    const special2026 = {
-      "2026-3-2": "대체공휴일(삼일절)", "2026-5-25": "대체공휴일(부처님오신날)", "2026-8-17": "대체공휴일(광복절)",
-      "2026-10-5": "대체공휴일(개천절)", "2026-2-19": "대체공휴일(설날)", "2026-9-28": "대체공휴일(추석)"
-    };
-    return special2026[ymd] || null;
+    const special 
+    = { "2026-3-2": "대체공휴일(삼일절)", "2026-5-25": "대체공휴일(부처님오신날)", "2026-8-17": "대체공휴일(광복절)", "2026-10-5": "대체공휴일(개천절)", "2026-2-19": "대체공휴일(설날)", "2026-9-28": "대체공휴일(추석)" };
+    return special[ymd] || null;
   };
 
   const parseTime = (val) => {
@@ -103,9 +101,9 @@ export default function App() {
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
-      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
+        {/* 📊 요약 카드 */}
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "15px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -118,22 +116,24 @@ export default function App() {
             <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
           </div>
         </div>
-      </div>
 
-      {/* ✨ [수정] 안내 가이드 Sticky: 가이드 박스를 화면 좌우 끝까지 꽉 채움 */}
-      <div style={{ 
-        position: "sticky", 
-        top: "0", 
-        zIndex: 2000, 
-        backgroundColor: "#1e293b", 
-        color: "white", 
-        width: "100%", // 가로 꽉 채우기
-        padding: "16px 0", // 내부 상하 패딩만 유지
-        fontSize: "15px", 
-        textAlign: "center",
-        borderBottom: "1px solid rgba(255,255,255,0.1)" 
-      }}>
-         남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
+        {/* ✨ [핵심 수정] 마이너스 마진을 이용해 부모 패딩을 뚫고 꽉 채우기 */}
+        <div style={{ 
+          position: "sticky", 
+          top: "0", 
+          zIndex: 2000, 
+          backgroundColor: "#1e293b", 
+          color: "white", 
+          marginLeft: "-24px",  // 부모 왼쪽 패딩 무시
+          marginRight: "-24px", // 부모 오른쪽 패딩 무시
+          padding: "16px 24px", 
+          fontSize: "15px", 
+          textAlign: "center",
+          boxShadow: "none",
+          borderBottom: "1px solid rgba(255,255,255,0.1)" 
+        }}>
+           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료 👏🏻
+        </div>
       </div>
 
       {/* 📝 날짜 리스트 */}
