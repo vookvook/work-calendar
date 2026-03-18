@@ -16,6 +16,9 @@ export default function App() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+  // 요일 한글 배열
+  const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
     const mmdd = `${month + 1}-${d}`;
@@ -94,14 +97,14 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더: 패딩 24px */}
+      {/* 📅 헤더 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
         <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
       </div>
 
-      {/* 📊 요약 카드: 패딩 24px */}
+      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 24px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 20px", borderRadius: "20px", color: "white", boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
@@ -115,20 +118,34 @@ export default function App() {
         </div>
       </div>
 
-      {/* 📝 날짜 리스트: 패딩 24px */}
+      {/* 📝 날짜 리스트 */}
       <div style={{ backgroundColor: "white" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
           const dayNum = new Date(year, month, date).getDay();
+          const dayText = weekDays[dayNum];
           const isWeekend = dayNum === 0 || dayNum === 6;
           const isToday = new Date().getDate() === date && new Date().getMonth() === month && new Date().getFullYear() === year;
           const isPast = isCurrentMonth && date < todayDate;
 
+          // 요일별 색상 결정
+          const getDayColor = () => {
+            if (holiday || dayNum === 0) return "#ef4444"; // 일요일/공휴일 빨강
+            if (dayNum === 6) return "#3b82f6"; // 토요일 파랑
+            return "#1e293b"; // 평일
+          };
+
           return (
             <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: "24px", fontWeight: "800", color: holiday || dayNum === 0 ? "#ef4444" : dayNum === 6 ? "#3b82f6" : "#1e293b", opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
-                {holiday && <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: "bold" }}>{holiday}</div>}
+              <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "8px" }}>
+                <span style={{ fontSize: "24px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>
+                  {date}
+                </span>
+                {/* ✨ 요일 표시 추가 */}
+                <span style={{ fontSize: "14px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>
+                  ({dayText})
+                </span>
+                {holiday && <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: "bold", marginLeft: "4px" }}>{holiday}</div>}
               </div>
 
               {!holiday && !isWeekend ? (
@@ -154,7 +171,7 @@ export default function App() {
         })}
       </div>
 
-      {/* 🔘 하단 고정 버튼 바: 패딩 24px */}
+      {/* 🔘 하단 고정 버튼 바 */}
       <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 1000 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
