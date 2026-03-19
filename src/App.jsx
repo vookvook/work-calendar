@@ -17,13 +17,13 @@ export default function App() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+  // ... (getHolidayName, parseTime, totalWorked 등 기존 로직 동일)
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
     const mmdd = `${month + 1}-${d}`;
     const fixed = { "1-1": "신정", "3-1": "삼일절", "5-5": "어린이날", "6-3": "지방선거", "6-6": "현충일", "8-15": "광복절", "10-3": "개천절", "10-9": "한글날", "12-25": "성탄절" };
     if (fixed[mmdd]) return fixed[mmdd];
-    const special 
-    = { "2026-3-2": "대체공휴일(삼일절)", "2026-5-25": "대체공휴일(부처님오신날)", "2026-8-17": "대체공휴일(광복절)", "2026-10-5": "대체공휴일(개천절)", "2026-2-19": "대체공휴일(설날)", "2026-9-28": "대체공휴일(추석)" };
+    const special = { "2026-3-2": "대체공휴일(삼일절)", "2026-5-25": "대체공휴일(부처님오신날)", "2026-8-17": "대체공휴일(광복절)", "2026-10-5": "대체공휴일(개천절)", "2026-2-19": "대체공휴일(설날)", "2026-9-28": "대체공휴일(추석)" };
     return special[ymd] || null;
   };
 
@@ -56,7 +56,11 @@ export default function App() {
   };
 
   useEffect(() => {
+    // ✨ 핵심 수정: body의 기본 마진을 제거하여 좌우 틈새를 없앱니다.
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
     document.documentElement.style.touchAction = "pan-y"; 
+    
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -92,22 +96,33 @@ export default function App() {
   };
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
+    /* ✨ 수정: width: 100vw와 overflowX 설정을 통해 여백 발생을 원천 차단 */
+    <div style={{ 
+      width: "100%", 
+      maxWidth: "100vw",
+      minHeight: "100vh", 
+      backgroundColor: "#f8fafc", 
+      paddingBottom: "120px", 
+      boxSizing: "border-box", 
+      fontFamily: pretendardFont,
+      margin: "0 auto",
+      overflowX: "hidden"
+    }}>
       
       {/* 📅 헤더 */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
-        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>◀</button>
+        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>◀</button>
         <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
-        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none" }}>▶</button>
+        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>▶</button>
       </div>
 
       {/* 📊 요약 카드 */}
-      <div style={{ padding: "15px 24px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", marginBottom: "5px" }}>
+      <div style={{ padding: "15px 20px" }}>
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont }} />
+              <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont, outline: "none" }} />
               <span style={{ fontSize: "18px" }}>h</span>
             </div>
           </div>
@@ -118,36 +133,24 @@ export default function App() {
         </div>
       </div>
 
-      {/* ✨ [핵심 수정] 독립된 부모 요소로 분리하여 Sticky 확실하게 보장 */}
-      <div style={{ position: "sticky", top: "0", zIndex: 2000, width: "100%", backgroundColor: "#f8fafc" }}>
-        <div style={{ 
-          backgroundColor: "#1e293b", 
-          color: "white", 
-          padding: "16px 24px", 
-          fontSize: "15px", 
-          textAlign: "center",
-          boxShadow: "none",
-          borderBottom: "1px solid rgba(255,255,255,0.1)" 
-        }}>
+      {/* ✨ 가로 꽉 차게 변경된 Sticky 안내바 */}
+      <div style={{ position: "sticky", top: "0", zIndex: 1000, width: "100%", backgroundColor: "#1e293b" }}>
+        <div style={{ color: "white", padding: "16px 24px", fontSize: "15px", textAlign: "center" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
-      {/* 📝 날짜 리스트 */}
+      {/* 📝 날짜 리스트 (좌우 여백 없이 꽉 차게) */}
       <div style={{ backgroundColor: "white" }}>
         {dates.map(date => {
+          // ... (날짜 리스트 렌더링 로직 기존과 동일)
           const holiday = getHolidayName(date);
           const dayNum = new Date(year, month, date).getDay();
           const dayText = weekDays[dayNum];
           const isWeekend = dayNum === 0 || dayNum === 6;
           const isToday = new Date().getDate() === date && new Date().getMonth() === month && new Date().getFullYear() === year;
           const isPast = isCurrentMonth && date < todayDate;
-
-          const getDayColor = () => {
-            if (holiday || dayNum === 0) return "#ef4444";
-            if (dayNum === 6) return "#3b82f6";
-            return "#1e293b";
-          };
+          const getDayColor = () => { if (holiday || dayNum === 0) return "#ef4444"; if (dayNum === 6) return "#3b82f6"; return "#1e293b"; };
 
           return (
             <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
@@ -158,7 +161,7 @@ export default function App() {
               </div>
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <input type="text" inputMode="text" autoCapitalize="none" autoCorrect="off" spellCheck="false" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} placeholder={isPast ? "0" : suggested} />
+                  <input type="text" inputMode="decimal" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} placeholder={isPast ? "0" : suggested} />
                   <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "45px", height: "45px", fontSize: "20px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center" }}>🗑️</button>
                 </div>
               ) : (
