@@ -17,7 +17,6 @@ export default function App() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // ... (getHolidayName, parseTime, totalWorked 등 기존 로직 동일)
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
     const mmdd = `${month + 1}-${d}`;
@@ -56,9 +55,14 @@ export default function App() {
   };
 
   useEffect(() => {
-    // ✨ 핵심 수정: body의 기본 마진을 제거하여 좌우 틈새를 없앱니다.
-    document.body.style.margin = "0";
-    document.body.style.padding = "0";
+    // 🎨 전역 스타일 초기화 (좌우 여백 제거 및 가로 스크롤 방지)
+    const style = document.createElement('style');
+    style.innerHTML = `
+      body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
+      #root { width: 100%; }
+    `;
+    document.head.appendChild(style);
+    
     document.documentElement.style.touchAction = "pan-y"; 
     
     const cached = localStorage.getItem(`work-data-${monthKey}`);
@@ -68,6 +72,8 @@ export default function App() {
       setTarget(parsed.target || "");
     }
     setTimeout(scrollToToday, 500);
+    
+    return () => { if (document.head.contains(style)) document.head.removeChild(style); };
   }, [monthKey]);
 
   const fetchFromServer = useCallback(async () => {
@@ -96,54 +102,50 @@ export default function App() {
   };
 
   return (
-    /* ✨ 수정: width: 100vw와 overflowX 설정을 통해 여백 발생을 원천 차단 */
-    <div style={{ 
-      width: "100%", 
-      maxWidth: "100vw",
-      minHeight: "100vh", 
-      backgroundColor: "#f8fafc", 
-      paddingBottom: "120px", 
-      boxSizing: "border-box", 
-      fontFamily: pretendardFont,
-      margin: "0 auto",
-      overflowX: "hidden"
-    }}>
+    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📅 헤더 */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" }}>
-        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>◀</button>
-        <h1 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
-        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>▶</button>
+      {/* 📅 Sticky 헤더 (연도/월 선택) */}
+      <div style={{ 
+        position: "sticky", top: 0, zIndex: 1001,
+        display: "flex", justifyContent: "space-between", alignItems: "center", 
+        padding: "15px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" 
+      }}>
+        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>◀</button>
+        <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
+        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>▶</button>
       </div>
 
-      {/* 📊 요약 카드 */}
+      {/* 📊 요약 카드 (이 부분은 스크롤됨) */}
       <div style={{ padding: "15px 20px" }}>
-        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white", boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)" }}>
+        <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
-            <span style={{ fontSize: "18px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
+            <span style={{ fontSize: "16px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "80px", fontSize: "22px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont, outline: "none" }} />
-              <span style={{ fontSize: "18px" }}>h</span>
+              <input type="number" inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", fontFamily: pretendardFont, outline: "none" }} />
+              <span style={{ fontSize: "16px" }}>h</span>
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
-            <div style={{ flex: 1 }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>누적 근무</div><div style={{ fontSize: "36px", fontWeight: "900" }}>{totalWorked.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
-            <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "14px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "36px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "16px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
+            <div style={{ flex: 1 }}><div style={{ fontSize: "13px", opacity: 0.8, marginBottom: "5px" }}>누적 근무</div><div style={{ fontSize: "32px", fontWeight: "900" }}>{totalWorked.toFixed(1)}<span style={{ fontSize: "14px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
+            <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: "13px", opacity: 0.8, marginBottom: "5px" }}>남은 시간</div><div style={{ fontSize: "32px", fontWeight: "900", color: displayDiff > 0 ? "#fff" : "#60a5fa" }}>{displayDiff.toFixed(1)}<span style={{ fontSize: "14px", fontWeight: "400", marginLeft: "4px" }}>h</span></div></div>
           </div>
         </div>
       </div>
 
-      {/* ✨ 가로 꽉 차게 변경된 Sticky 안내바 */}
-      <div style={{ position: "sticky", top: "0", zIndex: 1000, width: "100%", backgroundColor: "#1e293b" }}>
-        <div style={{ color: "white", padding: "16px 24px", fontSize: "15px", textAlign: "center" }}>
+      {/* ✨ Sticky 안내바 (헤더 바로 아래에 붙음) */}
+      <div style={{ 
+        position: "sticky", top: "61px", // 헤더 높이만큼 띄워서 바로 아래 고정
+        zIndex: 1000, width: "100%", backgroundColor: "#1e293b",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+      }}>
+        <div style={{ color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
-      {/* 📝 날짜 리스트 (좌우 여백 없이 꽉 차게) */}
+      {/* 📝 날짜 리스트 */}
       <div style={{ backgroundColor: "white" }}>
         {dates.map(date => {
-          // ... (날짜 리스트 렌더링 로직 기존과 동일)
           const holiday = getHolidayName(date);
           const dayNum = new Date(year, month, date).getDay();
           const dayText = weekDays[dayNum];
@@ -153,19 +155,19 @@ export default function App() {
           const getDayColor = () => { if (holiday || dayNum === 0) return "#ef4444"; if (dayNum === 6) return "#3b82f6"; return "#1e293b"; };
 
           return (
-            <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
+            <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
               <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "8px" }}>
-                <span style={{ fontSize: "24px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
-                <span style={{ fontSize: "14px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>({dayText})</span>
-                {holiday && <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: "bold", marginLeft: "4px" }}>{holiday}</div>}
+                <span style={{ fontSize: "22px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>({dayText})</span>
+                {holiday && <div style={{ fontSize: "11px", color: "#ef4444", fontWeight: "bold", marginLeft: "4px" }}>{holiday}</div>}
               </div>
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <input type="text" inputMode="decimal" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "85px", height: "45px", fontSize: "20px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f1f5f9" : "white" }} placeholder={isPast ? "0" : suggested} />
-                  <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "45px", height: "45px", fontSize: "20px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center" }}>🗑️</button>
+                  <input type="text" inputMode="decimal" value={hours[date] || ""} onChange={e => setHours({ ...hours, [date]: e.target.value })} style={{ width: "80px", height: "42px", fontSize: "18px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none", fontFamily: pretendardFont, backgroundColor: isPast && !hours[date] ? "#f8fafc" : "white" }} placeholder={isPast ? "0" : suggested} />
+                  <button onClick={() => setHours({ ...hours, [date]: "" })} style={{ width: "42px", height: "42px", fontSize: "18px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444", display: "flex", justifyContent: "center", alignItems: "center" }}>🗑️</button>
                 </div>
               ) : (
-                <span style={{ fontSize: "18px", color: "#cbd5e1", fontWeight: "bold" }}>OFF</span>
+                <span style={{ fontSize: "16px", color: "#cbd5e1", fontWeight: "bold" }}>OFF</span>
               )}
             </div>
           );
@@ -173,9 +175,9 @@ export default function App() {
       </div>
 
       {/* 🔘 하단 고정 버튼 바 */}
-      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "20px 24px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "15px", zIndex: 2000 }}>
-        <button onClick={fetchFromServer} disabled={loading} style={{ width: "70px", height: "70px", fontSize: "32px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
-        <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "70px", backgroundColor: "#1e293b", color: "white", fontSize: "22px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
+      <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "15px 20px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "12px", zIndex: 2000 }}>
+        <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
+        <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", backgroundColor: "#1e293b", color: "white", fontSize: "20px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
     </div>
   );
