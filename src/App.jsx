@@ -55,14 +55,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    // 🎨 전역 스타일 초기화 (좌우 여백 제거 및 가로 스크롤 방지)
+    // 🎨 전역 스타일 강제 적용 (좌우 흰 여백 제거)
     const style = document.createElement('style');
     style.innerHTML = `
-      body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; }
-      #root { width: 100%; }
+      body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; background-color: #f8fafc; }
+      #root { width: 100%; margin: 0; padding: 0; }
     `;
     document.head.appendChild(style);
-    
     document.documentElement.style.touchAction = "pan-y"; 
     
     const cached = localStorage.getItem(`work-data-${monthKey}`);
@@ -72,7 +71,6 @@ export default function App() {
       setTarget(parsed.target || "");
     }
     setTimeout(scrollToToday, 500);
-    
     return () => { if (document.head.contains(style)) document.head.removeChild(style); };
   }, [monthKey]);
 
@@ -102,20 +100,27 @@ export default function App() {
   };
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "120px", boxSizing: "border-box", fontFamily: pretendardFont }}>
+    <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont, margin: 0, padding: 0 }}>
       
-      {/* 📅 Sticky 헤더 (연도/월 선택) */}
-      <div style={{ 
-        position: "sticky", top: 0, zIndex: 1001,
-        display: "flex", justifyContent: "space-between", alignItems: "center", 
-        padding: "15px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" 
-      }}>
-        <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>◀</button>
-        <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
-        <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>▶</button>
+      {/* 📍 상단 고정 영역 (헤더 + 안내바) */}
+      <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%" }}>
+        {/* 헤더 */}
+        <div style={{ 
+          display: "flex", justifyContent: "space-between", alignItems: "center", 
+          padding: "15px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" 
+        }}>
+          <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>◀</button>
+          <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
+          <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
+        </div>
+
+        {/* ✨ 남색 안내바 (여기가 Sticky의 핵심입니다) */}
+        <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
+        </div>
       </div>
 
-      {/* 📊 요약 카드 (이 부분은 스크롤됨) */}
+      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 20px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
@@ -132,19 +137,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* ✨ Sticky 안내바 (헤더 바로 아래에 붙음) */}
-      <div style={{ 
-        position: "sticky", top: "61px", // 헤더 높이만큼 띄워서 바로 아래 고정
-        zIndex: 1000, width: "100%", backgroundColor: "#1e293b",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-      }}>
-        <div style={{ color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center" }}>
-           남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
-        </div>
-      </div>
-
       {/* 📝 날짜 리스트 */}
-      <div style={{ backgroundColor: "white" }}>
+      <div style={{ backgroundColor: "white", paddingBottom: "140px" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
           const dayNum = new Date(year, month, date).getDay();
