@@ -13,7 +13,6 @@ export default function App() {
   const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-  // 데이터 안정성을 위해 초기 monthKey 형식을 유지합니다.
   const monthKey = `${year}-${month + 1}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -49,18 +48,24 @@ export default function App() {
   const displayDiff = diff > 0 ? diff : 0;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
+  // --- 서버 데이터 가져오기 (개선됨) ---
   const fetchFromServer = useCallback(async () => {
     setLoading(true);
     try {
+      // 캐시 방지를 위해 랜덤 쿼리 파라미터(t) 추가
       const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
       const data = await res.json();
       if (data) {
         setHours(data.hours || {});
         setTarget(data.target || "");
+        // 성공 시 로컬 스토리지 최신화
         localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(data));
       }
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) { 
+      console.error("Fetch Error:", e);
+    } finally { 
+      setLoading(false); 
+    }
   }, [monthKey]);
 
   useEffect(() => {
@@ -71,6 +76,7 @@ export default function App() {
     `;
     document.head.appendChild(style);
     
+    // 1. 우선 로컬 캐시가 있으면 먼저 보여주어 사용자 경험 개선 (빈 화면 방지)
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -78,6 +84,7 @@ export default function App() {
       setTarget(parsed.target || "");
     }
     
+    // 2. [핵심] 페이지 로드 시 즉시 서버에서 최신 데이터를 강제로 가져옴
     fetchFromServer();
 
     if (isCurrentMonth) {
@@ -86,24 +93,28 @@ export default function App() {
       }, 600);
     }
     return () => { if (document.head.contains(style)) document.head.removeChild(style); };
-  }, [monthKey, fetchFromServer]);
+  }, [monthKey, fetchFromServer]); // monthKey가 바뀔 때마다(월 변경 시) 자동으로 실행됨
 
   const saveAll = async () => {
     setLoading(true);
     const body = { month: monthKey, target, hours };
     try {
       localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(body));
+      // POST 요청
       await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
       alert("저장 성공! 💾");
+      // 저장 후 다시 최신 상태를 불러옴
       fetchFromServer();
-    } catch (e) { alert("저장 실패"); }
-    finally { setLoading(false); }
+    } catch (e) { 
+      alert("저장 실패"); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
     <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📍 상단 고정 영역 (헤더 + 안내바) */}
       <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
         <div style={{ 
           display: "flex", justifyContent: "space-between", alignItems: "center", 
@@ -124,7 +135,6 @@ export default function App() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "16px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* 목표 시간도 일반 키보드로 수정 */}
               <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none" }} />
               <span style={{ fontSize: "16px" }}>h</span>
             </div>
@@ -154,7 +164,6 @@ export default function App() {
               </div>
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {/* ✨ 일반 키보드가 나오도록 type="text"만 유지하고 inputMode를 제거함 */}
                   <input 
                     type="text" 
                     value={hours[date] || ""} 
