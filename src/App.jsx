@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyWB3bMnu5wmC5oYqf1_LPVGwXTJ6DyWXMmHbS3JelzBREzrTbHC6HIK-YYYo-GFIjE/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwrpAEoEa5jvOzRM3eLyW2gkqukakDNz9LH-4Hwi8tlS7GMuBA2BwTBjaTr7Di6933e/exec";
 
 export default function WorkLogApp() {
   const [year, setYear] = useState(new Date().getFullYear());
