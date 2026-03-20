@@ -13,6 +13,7 @@ export default function App() {
   const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
+  // 데이터 안정성을 위해 초기 monthKey 형식을 유지합니다.
   const monthKey = `${year}-${month + 1}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -102,13 +103,17 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📍 상단 고정 영역 (구조 유지) */}
+      {/* 📍 상단 고정 영역 (헤더 + 안내바) */}
       <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 24px", borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ 
+          display: "flex", justifyContent: "space-between", alignItems: "center", 
+          padding: "15px 24px", borderBottom: "1px solid #e2e8f0" 
+        }}>
           <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>◀</button>
           <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
           <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
         </div>
+
         <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
@@ -119,7 +124,7 @@ export default function App() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "16px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* 목표 시간 인풋도 일반 키보드로 변경 */}
+              {/* 목표 시간도 일반 키보드로 수정 */}
               <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none" }} />
               <span style={{ fontSize: "16px" }}>h</span>
             </div>
@@ -149,7 +154,7 @@ export default function App() {
               </div>
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {/* ✨ [핵심수정] type="text"와 inputMode 제거로 일반 키보드 고정 */}
+                  {/* ✨ 일반 키보드가 나오도록 type="text"만 유지하고 inputMode를 제거함 */}
                   <input 
                     type="text" 
                     value={hours[date] || ""} 
