@@ -48,14 +48,25 @@ export default function App() {
   const displayDiff = diff > 0 ? diff : 0;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
-  const scrollToToday = () => {
-    if (todayRef.current) {
-      todayRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  const fetchFromServer = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
+      const data = await res.json();
+      if (data && data.hours) {
+        setHours(data.hours);
+        setTarget(data.target || "");
+        localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(data));
+      }
+    } catch (e) {
+      console.error("Fetch Error:", e);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [monthKey]);
 
   useEffect(() => {
-    // 🎨 전역 스타일 강제 적용 (좌우 흰 여백 제거)
+    // 🎨 전역 스타일 강제 적용 (좌우 여백 제거)
     const style = document.createElement('style');
     style.innerHTML = `
       body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; background-color: #f8fafc; }
@@ -64,29 +75,28 @@ export default function App() {
     document.head.appendChild(style);
     document.documentElement.style.touchAction = "pan-y"; 
     
+    // 1. 캐시 먼저 로드
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
       const parsed = JSON.parse(cached);
       setHours(parsed.hours || {});
       setTarget(parsed.target || "");
+    } else {
+      setHours({});
+      setTarget("");
     }
-    setTimeout(scrollToToday, 500);
-    return () => { if (document.head.contains(style)) document.head.removeChild(style); };
-  }, [monthKey]);
 
-  const fetchFromServer = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
-      const data = await res.json();
-      if (data) {
-        setHours(data.hours || {});
-        setTarget(data.target || "");
-        localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(data));
-      }
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [monthKey]);
+    // 2. 서버에서 최신 데이터 가져오기
+    fetchFromServer();
+
+    if (isCurrentMonth) {
+        setTimeout(() => {
+            if (todayRef.current) todayRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 600);
+    }
+    
+    return () => { if (document.head.contains(style)) document.head.removeChild(style); };
+  }, [monthKey, fetchFromServer, isCurrentMonth]);
 
   const saveAll = async () => {
     setLoading(true);
@@ -95,26 +105,27 @@ export default function App() {
       localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(body));
       await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
       alert("저장 성공! 💾");
-    } catch (e) { alert("저장 실패"); }
-    finally { setLoading(false); }
+    } catch (e) { 
+      alert("저장 실패"); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
     <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont, margin: 0, padding: 0 }}>
       
-      {/* 📍 상단 고정 영역 (헤더 + 안내바) */}
-      <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%" }}>
-        {/* 헤더 */}
+      {/* 📍 상단 고정 영역 */}
+      <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
         <div style={{ 
           display: "flex", justifyContent: "space-between", alignItems: "center", 
-          padding: "15px 24px", backgroundColor: "white", borderBottom: "1px solid #e2e8f0" 
+          padding: "15px 24px", borderBottom: "1px solid #e2e8f0" 
         }}>
           <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>◀</button>
           <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
           <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
         </div>
 
-        {/* ✨ 남색 안내바 (여기가 Sticky의 핵심입니다) */}
         <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
@@ -168,9 +179,11 @@ export default function App() {
         })}
       </div>
 
-      {/* 🔘 하단 고정 버튼 바 */}
+      {/* 🔘 하단 버튼 */}
       <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "15px 20px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "12px", zIndex: 2000 }}>
-        <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>🔄</button>
+        <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {loading ? "..." : "🔄"}
+        </button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", backgroundColor: "#1e293b", color: "white", fontSize: "20px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
       </div>
     </div>
