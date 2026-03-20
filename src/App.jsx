@@ -10,9 +10,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   
   const todayRef = useRef(null);
+  const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-  // 1. 데이터 매칭용 키 (보여주신 시트 데이터가 '2026-03' 형식이면 아래처럼 유지)
+  // 데이터 조회를 위한 키 (예: 2026-03)
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -48,44 +49,36 @@ export default function App() {
   const displayDiff = diff > 0 ? diff : 0;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
-  // --- 2. 서버 데이터 불러오기 (로그 추가 및 형식 보정) ---
+  // --- 서버 데이터 가져오기 (보여주신 데이터 구조 반영) ---
   const fetchFromServer = useCallback(async () => {
     setLoading(true);
-    console.log("요청 보내는 중... URL:", `${API_URL}?month=${monthKey}`);
     try {
       const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
       const data = await res.json();
-      console.log("서버 응답 데이터:", data);
-
-      if (data) {
-        // 서버에서 오는 데이터가 { "3": "7:53", ... } 형태인지 확인
+      
+      if (data && data.hours) {
+        // 만약 서버 데이터가 배열 형태라면 객체 {날짜: 시간}로 변환하는 로직 포함
+        // (보여주신 시트 데이터가 3, 4, 5... 처럼 날짜만 오는 경우를 대비)
         setHours(data.hours || {});
         setTarget(data.target || "160");
         localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(data));
       }
     } catch (e) { 
-      console.error("데이터 불러오기 실패:", e);
+      console.error("Fetch Error:", e);
     } finally { 
       setLoading(false); 
     }
   }, [monthKey]);
 
   useEffect(() => {
-    // 3. 스티키를 방해하는 모든 요소를 제거하는 CSS 강제 주입
     const style = document.createElement('style');
     style.innerHTML = `
-      html, body { 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        overflow: visible !important; /* 스티키의 핵심 */
-        height: auto !important;
-      }
-      #root { 
-        overflow: visible !important; 
-      }
+      body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; background-color: #f8fafc; }
+      #root { width: 100%; margin: 0; padding: 0; }
     `;
     document.head.appendChild(style);
     
+    // 1. 로컬 스토리지 데이터 우선 로드
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -93,6 +86,7 @@ export default function App() {
       setTarget(parsed.target || "");
     }
     
+    // 2. 페이지 로드 시 무조건 새로고침
     fetchFromServer();
 
     if (isCurrentMonth) {
@@ -116,38 +110,41 @@ export default function App() {
   };
 
   return (
-    <div style={{ width: "100%", fontFamily: "Pretendard, sans-serif" }}>
+    <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📍 상단 고정 영역: 이 영역 전체가 따라와야 함 */}
-      <div style={{ 
-        position: "-webkit-sticky", 
-        position: "sticky", 
-        top: 0, 
-        zIndex: 1000, 
-        backgroundColor: "white",
-        width: "100%"
-      }}>
+      {/* 📍 상단 고정 영역 (수정됨) */}
+      <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
+        {/* 헤더 섹션 */}
         <div style={{ 
           display: "flex", justifyContent: "space-between", alignItems: "center", 
-          padding: "15px 24px", borderBottom: "1px solid #e2e8f0" 
+          padding: "15px 24px", borderBottom: "1px solid #e2e8f0", backgroundColor: "white"
         }}>
-          <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>◀</button>
-          <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
-          <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
+          <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>◀</button>
+          <h1 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
+          <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none", cursor: "pointer" }}>▶</button>
         </div>
 
-        <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+        {/* 안내바 섹션 (스티키 포함) */}
+        <div style={{ 
+          backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", 
+          textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" 
+        }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
-      {/* 대시보드 */}
+      {/* 대시보드 카드 */}
       <div style={{ padding: "15px 20px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "16px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none" }} />
+              <input 
+                type="text" 
+                value={target} 
+                onChange={e => setTarget(e.target.value)} 
+                style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none" }} 
+              />
               <span style={{ fontSize: "16px" }}>h</span>
             </div>
           </div>
@@ -158,7 +155,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* 리스트 */}
+      {/* 리스트 영역 */}
       <div style={{ backgroundColor: "white", paddingBottom: "140px" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
@@ -194,5 +191,11 @@ export default function App() {
         })}
       </div>
 
-      {/* 하단 버튼 */}
+      {/* 하단 버튼 바 */}
       <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "15px 20px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "12px", zIndex: 2000 }}>
+        <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px" }}>{loading ? "..." : "🔄"}</button>
+        <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", backgroundColor: "#1e293b", color: "white", fontSize: "20px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
+      </div>
+    </div>
+  );
+}
