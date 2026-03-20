@@ -41,8 +41,7 @@ export default function App() {
     if (isCurrentMonth && d < todayDate) return false;
     const dayNum = new Date(year, month, d).getDay();
     const holiday = getHolidayName(d);
-    const hasValue = hours[String(d)] || hours[d];
-    return dayNum !== 0 && dayNum !== 6 && !holiday && !hasValue;
+    return dayNum !== 0 && dayNum !== 6 && !holiday && !hours[d];
   }).length;
 
   const diff = Number(target) - totalWorked;
@@ -86,7 +85,7 @@ export default function App() {
       }, 600);
     }
     return () => { if (document.head.contains(style)) document.head.removeChild(style); };
-  }, [monthKey, fetchFromServer, isCurrentMonth]);
+  }, [monthKey, fetchFromServer]);
 
   const saveAll = async () => {
     setLoading(true);
@@ -103,27 +102,25 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont }}>
       
-      {/* 📍 [FIX] 상단 고정 영역: 헤더 + 안내바를 하나로 묶음 */}
+      {/* 📍 상단 고정 영역 (구조 유지) */}
       <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
-        {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 24px", borderBottom: "1px solid #e2e8f0" }}>
           <button onClick={() => month === 0 ? (setMonth(11), setYear(year - 1)) : setMonth(month - 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>◀</button>
           <h1 style={{ fontSize: "24px", fontWeight: "800", margin: 0 }}>{year}. {month + 1}</h1>
           <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
         </div>
-        {/* 남색 안내바 */}
         <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
-      {/* 📊 요약 카드 */}
       <div style={{ padding: "15px 20px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{ fontSize: "16px", fontWeight: "600", opacity: 0.9 }}>목표 시간 설정</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none", colorScheme: "dark" }} />
+              {/* 목표 시간 인풋도 일반 키보드로 변경 */}
+              <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", fontSize: "20px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontWeight: "800", outline: "none" }} />
               <span style={{ fontSize: "16px" }}>h</span>
             </div>
           </div>
@@ -134,7 +131,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* 📝 날짜 리스트 */}
       <div style={{ backgroundColor: "white", paddingBottom: "140px" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
@@ -144,20 +140,24 @@ export default function App() {
           const isPast = isCurrentMonth && date < todayDate;
           const getDayColor = () => { if (holiday || dayNum === 0) return "#ef4444"; if (dayNum === 6) return "#3b82f6"; return "#1e293b"; };
           
-          const hourValue = hours[String(date)] || hours[date] || "";
-
           return (
             <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
               <div style={{ flex: 1, display: "flex", alignItems: "baseline", gap: "8px" }}>
-                <span style={{ fontSize: "22px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hourValue ? 0.5 : 1 }}>{date}</span>
-                <span style={{ fontSize: "13px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hourValue ? 0.5 : 0.7 }}>({weekDays[dayNum]})</span>
+                <span style={{ fontSize: "22px", fontWeight: "800", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 1 }}>{date}</span>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: getDayColor(), opacity: isPast && !hours[date] ? 0.5 : 0.7 }}>({weekDays[dayNum]})</span>
                 {holiday && <div style={{ fontSize: "11px", color: "#ef4444", fontWeight: "bold" }}>{holiday}</div>}
               </div>
               {!holiday && !isWeekend ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {/* [FIX] inputMode 제거하여 일반 키보드(: 입력가능) 나오게 수정 */}
-                  <input type="text" value={hourValue} onChange={e => setHours(prev => ({ ...prev, [String(date)]: e.target.value }))} style={{ width: "80px", height: "42px", fontSize: "18px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none" }} placeholder={isPast ? "0" : suggested} />
-                  <button onClick={() => setHours(prev => { const n = {...prev}; delete n[String(date)]; delete n[date]; return n; })} style={{ width: "42px", height: "42px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444" }}>🗑️</button>
+                  {/* ✨ [핵심수정] type="text"와 inputMode 제거로 일반 키보드 고정 */}
+                  <input 
+                    type="text" 
+                    value={hours[date] || ""} 
+                    onChange={e => setHours({ ...hours, [date]: e.target.value })} 
+                    style={{ width: "80px", height: "42px", fontSize: "18px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 8px", outline: "none" }} 
+                    placeholder={isPast ? "0" : suggested} 
+                  />
+                  <button onClick={() => setHours(prev => { const n = {...prev}; delete n[date]; return n; })} style={{ width: "42px", height: "42px", background: "#fef2f2", border: "1px solid #fee2e2", borderRadius: "10px", color: "#ef4444" }}>🗑️</button>
                 </div>
               ) : (
                 <span style={{ fontSize: "16px", color: "#cbd5e1", fontWeight: "bold" }}>OFF</span>
@@ -167,7 +167,6 @@ export default function App() {
         })}
       </div>
 
-      {/* 🔘 하단 버튼 */}
       <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "15px 20px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "12px", zIndex: 2000 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px" }}>{loading ? "..." : "🔄"}</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", backgroundColor: "#1e293b", color: "white", fontSize: "20px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
