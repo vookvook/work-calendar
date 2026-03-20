@@ -10,19 +10,19 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   
   const todayRef = useRef(null);
-  const pretendardFont = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-  const monthKey = `${year}-${month + 1}`;
+  // 1. 데이터 매칭용 키 (보여주신 시트 데이터가 '2026-03' 형식이면 아래처럼 유지)
+  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const getHolidayName = (d) => {
     const ymd = `${year}-${month + 1}-${d}`;
     const mmdd = `${month + 1}-${d}`;
-    const fixed = { "1-1": "신정", "3-1": "삼일절", "5-5": "어린이날", "6-3": "지방선거", "6-6": "현충일", "8-15": "광복절", "10-3": "개천절", "10-9": "한글날", "12-25": "성탄절" };
+    const fixed = { "1-1": "신정", "3-1": "삼일절", "5-5": "어린이날", "6-6": "현충일", "8-15": "광복절", "10-3": "개천절", "10-9": "한글날", "12-25": "성탄절" };
     if (fixed[mmdd]) return fixed[mmdd];
-    const special = { "2026-3-2": "대체공휴일(삼일절)", "2026-5-25": "대체공휴일(부처님오신날)", "2026-8-17": "대체공휴일(광복절)", "2026-10-5": "대체공휴일(개천절)", "2026-2-19": "대체공휴일(설날)", "2026-9-28": "대체공휴일(추석)" };
+    const special = { "2026-3-2": "대체공휴일", "2026-5-25": "부처님오신날(대체)", "2026-6-3": "지방선거" };
     return special[ymd] || null;
   };
 
@@ -48,35 +48,44 @@ export default function App() {
   const displayDiff = diff > 0 ? diff : 0;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
-  // --- 서버 데이터 가져오기 (개선됨) ---
+  // --- 2. 서버 데이터 불러오기 (로그 추가 및 형식 보정) ---
   const fetchFromServer = useCallback(async () => {
     setLoading(true);
+    console.log("요청 보내는 중... URL:", `${API_URL}?month=${monthKey}`);
     try {
-      // 캐시 방지를 위해 랜덤 쿼리 파라미터(t) 추가
       const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
       const data = await res.json();
+      console.log("서버 응답 데이터:", data);
+
       if (data) {
+        // 서버에서 오는 데이터가 { "3": "7:53", ... } 형태인지 확인
         setHours(data.hours || {});
-        setTarget(data.target || "");
-        // 성공 시 로컬 스토리지 최신화
+        setTarget(data.target || "160");
         localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(data));
       }
     } catch (e) { 
-      console.error("Fetch Error:", e);
+      console.error("데이터 불러오기 실패:", e);
     } finally { 
       setLoading(false); 
     }
   }, [monthKey]);
 
   useEffect(() => {
+    // 3. 스티키를 방해하는 모든 요소를 제거하는 CSS 강제 주입
     const style = document.createElement('style');
     style.innerHTML = `
-      body, html { margin: 0 !important; padding: 0 !important; width: 100%; overflow-x: hidden; background-color: #f8fafc; }
-      #root { width: 100%; margin: 0; padding: 0; }
+      html, body { 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        overflow: visible !important; /* 스티키의 핵심 */
+        height: auto !important;
+      }
+      #root { 
+        overflow: visible !important; 
+      }
     `;
     document.head.appendChild(style);
     
-    // 1. 우선 로컬 캐시가 있으면 먼저 보여주어 사용자 경험 개선 (빈 화면 방지)
     const cached = localStorage.getItem(`work-data-${monthKey}`);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -84,7 +93,6 @@ export default function App() {
       setTarget(parsed.target || "");
     }
     
-    // 2. [핵심] 페이지 로드 시 즉시 서버에서 최신 데이터를 강제로 가져옴
     fetchFromServer();
 
     if (isCurrentMonth) {
@@ -93,29 +101,32 @@ export default function App() {
       }, 600);
     }
     return () => { if (document.head.contains(style)) document.head.removeChild(style); };
-  }, [monthKey, fetchFromServer]); // monthKey가 바뀔 때마다(월 변경 시) 자동으로 실행됨
+  }, [monthKey, fetchFromServer]);
 
   const saveAll = async () => {
     setLoading(true);
     const body = { month: monthKey, target, hours };
     try {
       localStorage.setItem(`work-data-${monthKey}`, JSON.stringify(body));
-      // POST 요청
       await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(body) });
       alert("저장 성공! 💾");
-      // 저장 후 다시 최신 상태를 불러옴
       fetchFromServer();
-    } catch (e) { 
-      alert("저장 실패"); 
-    } finally { 
-      setLoading(false); 
-    }
+    } catch (e) { alert("저장 실패"); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", boxSizing: "border-box", fontFamily: pretendardFont }}>
+    <div style={{ width: "100%", fontFamily: "Pretendard, sans-serif" }}>
       
-      <div style={{ position: "sticky", top: 0, zIndex: 1000, width: "100%", backgroundColor: "white" }}>
+      {/* 📍 상단 고정 영역: 이 영역 전체가 따라와야 함 */}
+      <div style={{ 
+        position: "-webkit-sticky", 
+        position: "sticky", 
+        top: 0, 
+        zIndex: 1000, 
+        backgroundColor: "white",
+        width: "100%"
+      }}>
         <div style={{ 
           display: "flex", justifyContent: "space-between", alignItems: "center", 
           padding: "15px 24px", borderBottom: "1px solid #e2e8f0" 
@@ -125,11 +136,12 @@ export default function App() {
           <button onClick={() => month === 11 ? (setMonth(0), setYear(year + 1)) : setMonth(month + 1)} style={{ fontSize: "20px", background: "none", border: "none" }}>▶</button>
         </div>
 
-        <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+        <div style={{ backgroundColor: "#1e293b", color: "white", padding: "14px 24px", fontSize: "14px", textAlign: "center", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
            남은 평일 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{remainingWeekdays}일</span> 동안 하루 <span style={{ fontWeight: "bold", color: "#60a5fa", textDecoration: "underline" }}>{suggested}시간</span>씩 하면 완료!
         </div>
       </div>
 
+      {/* 대시보드 */}
       <div style={{ padding: "15px 20px" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", padding: "25px 24px", borderRadius: "24px", color: "white" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
@@ -146,6 +158,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* 리스트 */}
       <div style={{ backgroundColor: "white", paddingBottom: "140px" }}>
         {dates.map(date => {
           const holiday = getHolidayName(date);
@@ -181,6 +194,7 @@ export default function App() {
         })}
       </div>
 
+      {/* 하단 버튼 */}
       <div style={{ position: "fixed", bottom: "0", left: "0", width: "100%", display: "flex", padding: "15px 20px", boxSizing: "border-box", background: "white", borderTop: "1px solid #e2e8f0", gap: "12px", zIndex: 2000 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", fontSize: "28px", backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: "15px" }}>{loading ? "..." : "🔄"}</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", backgroundColor: "#1e293b", color: "white", fontSize: "20px", fontWeight: "800", borderRadius: "15px", border: "none" }}>저장하기</button>
