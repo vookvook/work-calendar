@@ -32,6 +32,14 @@ export default function WorkLogApp() {
     return isWeekend || isPublicHoliday;
   };
 
+  // ✅ 시간을 00:00 형식으로 변환하는 헬퍼 함수
+  const formatTimeDisplay = (decimalTime) => {
+    if (decimalTime <= 0) return "0:00";
+    const h = Math.floor(decimalTime);
+    const m = Math.round((decimalTime - h) * 60);
+    return `${h}:${String(m).padStart(2, '0')}`;
+  };
+
   const parseTime = (val) => {
     let str = String(val || "").trim();
     if (!str) return 0;
@@ -102,7 +110,6 @@ export default function WorkLogApp() {
     finally { setLoading(false); }
   };
 
-  // ✅ 특정 날짜의 입력을 지우는 함수
   const clearDate = (date) => {
     const newHours = { ...hours };
     delete newHours[String(date)];
@@ -119,7 +126,8 @@ export default function WorkLogApp() {
   };
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "100px", fontFamily: "sans-serif" }}>
+    // ✅ overflowX: "hidden" 추가하여 좌우 스크롤 차단
+    <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "100px", fontFamily: "sans-serif", overflowX: "hidden" }}>
       <div style={{ position: "sticky", top: 0, zIndex: 1000, backgroundColor: "white", width: "100%", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px" }}>
           <button style={{border:'none', background:'none', fontSize:'20px', padding:'10px', cursor:'pointer'}} onClick={handlePrevMonth}>◀</button>
@@ -131,7 +139,7 @@ export default function WorkLogApp() {
         </div>
       </div>
 
-      <div style={{ padding: "20px" }}>
+      <div style={{ padding: "20px", boxSizing: "border-box" }}>
         <div style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)", padding: "25px", borderRadius: "24px", color: "white", marginBottom: "20px", boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{fontWeight:'600'}}>목표 시간</span>
@@ -141,8 +149,9 @@ export default function WorkLogApp() {
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div><small style={{opacity:0.8}}>누적 근무</small><div style={{fontSize:'24px', fontWeight:'900'}}>{totalWorked.toFixed(1)}h</div></div>
-            <div style={{textAlign:'right'}}><small style={{opacity:0.8}}>남은 시간</small><div style={{fontSize:'24px', fontWeight:'900'}}>{(diff > 0 ? diff : 0).toFixed(1)}h</div></div>
+            {/* ✅ 시간 표시 형식 변경 (HH:mm) */}
+            <div><small style={{opacity:0.8}}>누적 근무</small><div style={{fontSize:'24px', fontWeight:'900'}}>{formatTimeDisplay(totalWorked)}</div></div>
+            <div style={{textAlign:'right'}}><small style={{opacity:0.8}}>남은 시간</small><div style={{fontSize:'24px', fontWeight:'900'}}>{formatTimeDisplay(diff > 0 ? diff : 0)}</div></div>
           </div>
         </div>
 
@@ -160,7 +169,6 @@ export default function WorkLogApp() {
                 </span>
                 
                 {!holidayCheck ? (
-                  // ✅ 인풋과 쓰레기통을 감싸는 Flex 박스
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <input 
                       type="text" 
@@ -169,7 +177,6 @@ export default function WorkLogApp() {
                       style={{ width: "80px", height: "36px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 10px", fontSize: "15px", outline: "none" }} 
                       placeholder={suggested} 
                     />
-                    {/* ✅ 쓰레기통 아이콘: 값이 있을 때만 표시 */}
                     {hourValue ? (
                       <button 
                         onClick={() => clearDate(date)} 
@@ -178,7 +185,7 @@ export default function WorkLogApp() {
                         🗑️
                       </button>
                     ) : (
-                      <div style={{ width: "26px" }}></div> // 아이콘이 없을 때 공간 유지용
+                      <div style={{ width: "26px" }}></div>
                     )}
                   </div>
                 ) : (
