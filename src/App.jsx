@@ -12,29 +12,18 @@ export default function WorkLogApp() {
   const todayRef = useRef(null);
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
-  // ✅ 한국 공휴일 데이터 (2026년 기준 예시 - 필요한 날짜를 추가하세요)
   const koreanHolidays = [
-    "2026-01-01", // 신정
-    "2026-02-16", "2026-02-17", "2026-02-18", // 설날 연휴
-    "2026-03-01", "2026-03-02", // 삼일절 및 대체공휴일
-    "2026-05-05", // 어린이날
-    "2026-05-24", // 부처님 오신 날
-    "2026-05-25", // 대체공휴일
-    "2026-06-06", // 현충일
-    "2026-08-15", // 광복절
-    "2026-08-17", // 대체공휴일
-    "2026-09-24", "2026-09-25", "2026-09-26", // 추석 연휴
-    "2026-10-03", // 개천절
-    "2026-10-05", // 개천절 대체공휴일 (월요일)
-    "2026-10-09", // 한글날
-    "2026-12-25"  // 성탄절
+    "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", 
+    "2026-03-01", "2026-03-02", "2026-05-05", "2026-05-24", 
+    "2026-05-25", "2026-06-06", "2026-08-15", "2026-08-17", 
+    "2026-09-24", "2026-09-25", "2026-09-26", "2026-10-03", 
+    "2026-10-05", "2026-10-09", "2026-12-25"
   ];
 
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // ✅ 휴일 판별 함수 (주말 또는 공휴일 리스트에 포함된 경우)
   const isHoliday = (d) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const dayNum = new Date(year, month, d).getDay();
@@ -59,12 +48,11 @@ export default function WorkLogApp() {
   const todayDate = new Date().getDate();
   const isCurrentMonth = new Date().getFullYear() === year && new Date().getMonth() === month;
 
-  // ✅ 남은 평일 계산 (공휴일 제외 로직 적용)
   const remainingWeekdays = dates.filter(d => {
     if (isCurrentMonth && d < todayDate) return false;
     const holidayCheck = isHoliday(d);
     const hasValue = hours[String(d)];
-    return !holidayCheck && !hasValue; // 휴일이 아니고 데이터가 없는 날만 카운트
+    return !holidayCheck && !hasValue;
   }).length;
 
   const diff = Number(target) - totalWorked;
@@ -114,6 +102,13 @@ export default function WorkLogApp() {
     finally { setLoading(false); }
   };
 
+  // ✅ 특정 날짜의 입력을 지우는 함수
+  const clearDate = (date) => {
+    const newHours = { ...hours };
+    delete newHours[String(date)];
+    setHours(newHours);
+  };
+
   const handlePrevMonth = () => {
     if (month === 0) { setYear(year - 1); setMonth(11); }
     else { setMonth(month - 1); }
@@ -154,20 +149,41 @@ export default function WorkLogApp() {
         <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
           {dates.map(date => {
             const dayNum = new Date(year, month, date).getDay();
-            const holidayCheck = isHoliday(date); // ✅ 주말+공휴일 체크
+            const holidayCheck = isHoliday(date);
             const isToday = new Date().getDate() === date && isCurrentMonth;
             const hourValue = hours[String(date)] || "";
 
             return (
               <div key={date} ref={isToday ? todayRef : null} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "15px 20px", borderBottom: "1px solid #f1f5f9", backgroundColor: isToday ? "#eff6ff" : "white" }}>
-                <span style={{ fontSize:'16px', fontWeight:'700', color: (dayNum === 0 || isHoliday(date)) ? "#ef4444" : (dayNum === 6 ? "#3b82f6" : "#1e293b") }}>
+                <span style={{ fontSize:'16px', fontWeight:'700', color: (dayNum === 0 || holidayCheck) ? "#ef4444" : (dayNum === 6 ? "#3b82f6" : "#1e293b") }}>
                   {date} <small style={{fontSize:'12px', fontWeight:'500', opacity:0.6}}>({weekDays[dayNum]})</small>
                 </span>
                 
-                {/* ✅ 휴일(주말 포함)이면 입력창 대신 OFF 표시 */}
                 {!holidayCheck ? (
-                  <input type="text" value={hourValue} onChange={e => setHours({ ...hours, [String(date)]: e.target.value })} style={{ width: "80px", height: "36px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 10px", fontSize: "15px", outline: "none" }} placeholder={suggested} />
-                ) : <span style={{color:'#cbd5e1', fontSize:'14px', fontWeight:'bold'}}>OFF</span>}
+                  // ✅ 인풋과 쓰레기통을 감싸는 Flex 박스
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input 
+                      type="text" 
+                      value={hourValue} 
+                      onChange={e => setHours({ ...hours, [String(date)]: e.target.value })} 
+                      style={{ width: "80px", height: "36px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 10px", fontSize: "15px", outline: "none" }} 
+                      placeholder={suggested} 
+                    />
+                    {/* ✅ 쓰레기통 아이콘: 값이 있을 때만 표시 */}
+                    {hourValue ? (
+                      <button 
+                        onClick={() => clearDate(date)} 
+                        style={{ border: "none", background: "none", padding: "5px", cursor: "pointer", fontSize: "16px", opacity: 0.5 }}
+                      >
+                        🗑️
+                      </button>
+                    ) : (
+                      <div style={{ width: "26px" }}></div> // 아이콘이 없을 때 공간 유지용
+                    )}
+                  </div>
+                ) : (
+                  <span style={{ color:'#cbd5e1', fontSize:'14px', fontWeight:'bold', marginRight: "34px" }}>OFF</span>
+                )}
               </div>
             );
           })}
