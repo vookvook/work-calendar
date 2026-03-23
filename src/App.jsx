@@ -6,7 +6,7 @@ export default function WorkLogApp() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [hours, setHours] = useState({});
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState(""); // 이제 "40:00" 형식을 가집니다.
   const [loading, setLoading] = useState(false);
   
   const todayRef = useRef(null);
@@ -32,17 +32,11 @@ export default function WorkLogApp() {
     return isWeekend || isPublicHoliday;
   };
 
-  // ✅ 시간을 00:00 형식으로 변환하는 헬퍼 함수
-  const formatTimeDisplay = (decimalTime) => {
-    if (decimalTime <= 0) return "0:00";
-    const h = Math.floor(decimalTime);
-    const m = Math.round((decimalTime - h) * 60);
-    return `${h}:${String(m).padStart(2, '0')}`;
-  };
-
+  // ✅ [HH:mm] 형식의 문자열을 계산용 소수점 숫자로 변환
   const parseTime = (val) => {
     let str = String(val || "").trim();
     if (!str) return 0;
+    // 한글 포함 형식 대응 (앱스크립트 데이터 대응용)
     if (str.includes("오전") || str.includes("오후")) {
       const match = str.match(/\d+:\d+/);
       str = match ? match[0] : "0";
@@ -52,7 +46,18 @@ export default function WorkLogApp() {
     return (h || 0) + (m || 0) / 60;
   };
 
+  // ✅ 소수점 숫자를 [HH:mm] 형식의 문자열로 변환
+  const formatTimeDisplay = (decimalTime) => {
+    if (decimalTime <= 0) return "0:00";
+    const h = Math.floor(decimalTime);
+    const m = Math.round((decimalTime - h) * 60);
+    return `${h}:${String(m).padStart(2, '0')}`;
+  };
+
   const totalWorked = Object.values(hours).reduce((a, b) => a + parseTime(b), 0);
+  const targetDecimal = parseTime(target); // 목표 시간도 계산을 위해 소수점 변환
+  const diff = targetDecimal - totalWorked;
+
   const todayDate = new Date().getDate();
   const isCurrentMonth = new Date().getFullYear() === year && new Date().getMonth() === month;
 
@@ -63,7 +68,6 @@ export default function WorkLogApp() {
     return !holidayCheck && !hasValue;
   }).length;
 
-  const diff = Number(target) - totalWorked;
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
   const fetchFromServer = useCallback(async () => {
@@ -104,7 +108,7 @@ export default function WorkLogApp() {
         body: JSON.stringify(payload)
       });
 
-      alert("저장 요청이 전송되었습니다! 💾");
+      alert("저장되었습니다! 💾");
       setTimeout(() => fetchFromServer(), 1500);
     } catch (e) { alert("저장 실패"); }
     finally { setLoading(false); }
@@ -126,7 +130,6 @@ export default function WorkLogApp() {
   };
 
   return (
-    // ✅ overflowX: "hidden" 추가하여 좌우 스크롤 차단
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "100px", fontFamily: "sans-serif", overflowX: "hidden" }}>
       <div style={{ position: "sticky", top: 0, zIndex: 1000, backgroundColor: "white", width: "100%", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px" }}>
@@ -140,21 +143,28 @@ export default function WorkLogApp() {
       </div>
 
       <div style={{ padding: "20px", boxSizing: "border-box" }}>
+        {/* 상단 요약 카드 */}
         <div style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)", padding: "25px", borderRadius: "24px", color: "white", marginBottom: "20px", boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{fontWeight:'600'}}>목표 시간</span>
             <div style={{display:'flex', alignItems:'center', gap:'5px'}}>
-              <input type="text" value={target} onChange={e => setTarget(e.target.value)} style={{ width: "70px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontSize: "18px", fontWeight: "bold", outline: "none" }} />
-              <span>h</span>
+              {/* ✅ 목표 시간 입력창: 이제 40:00 형식을 입력받습니다 */}
+              <input 
+                type="text" 
+                value={target} 
+                onChange={e => setTarget(e.target.value)} 
+                placeholder="00:00"
+                style={{ width: "90px", background: "rgba(255,255,255,0.2)", border: "none", color: "white", textAlign: "right", borderRadius: "8px", padding: "5px 10px", fontSize: "18px", fontWeight: "bold", outline: "none" }} 
+              />
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            {/* ✅ 시간 표시 형식 변경 (HH:mm) */}
             <div><small style={{opacity:0.8}}>누적 근무</small><div style={{fontSize:'24px', fontWeight:'900'}}>{formatTimeDisplay(totalWorked)}</div></div>
             <div style={{textAlign:'right'}}><small style={{opacity:0.8}}>남은 시간</small><div style={{fontSize:'24px', fontWeight:'900'}}>{formatTimeDisplay(diff > 0 ? diff : 0)}</div></div>
           </div>
         </div>
 
+        {/* 일별 리스트 */}
         <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
           {dates.map(date => {
             const dayNum = new Date(year, month, date).getDay();
