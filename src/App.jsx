@@ -55,7 +55,7 @@ export default function WorkLogApp() {
     setLoading(true);
     try {
       // 쿼리 파라미터로 monthKey 전달
-      const res = await fetch(`${API_URL}?month=${monthKey}`);
+      const res = await fetch(`${API_URL}?month=${monthKey}&t=${new Date().getTime()}`);
       const data = await res.json();
       if (data) {
         // 앱스크립트에서 보낸 JSON 구조에 맞춰 상태 업데이트
