@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
-// ✅ 최신 배포된 앱스크립트 URL을 여기에 붙여넣으세요.
 const API_URL = "https://script.google.com/macros/s/AKfycbyA5SoFYozvjhTbQoqIdqjKLdSae-IL0mosWMYe1mAFyGn_H1p4ET4R2FRlmdMB7G19/exec";
 
 export default function WorkLogApp() {
@@ -10,20 +9,20 @@ export default function WorkLogApp() {
   const [target, setTarget] = useState("");
   const [loading, setLoading] = useState(false);
   
+  // ✅ [추가] 서버에서 받아온 원본 데이터를 저장할 상태 (비교용)
+  const [originalData, setOriginalData] = useState({ hours: {}, target: "" });
+
   const todayRef = useRef(null);
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
-
-  const koreanHolidays = [
-    "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", 
-    "2026-03-01", "2026-03-02", "2026-05-05", "2026-05-24", 
-    "2026-05-25", "2026-06-06", "2026-08-15", "2026-08-17", 
-    "2026-09-24", "2026-09-25", "2026-09-26", "2026-10-03", 
-    "2026-10-05", "2026-10-09", "2026-12-25"
-  ];
+  const koreanHolidays = ["2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-03-01", "2026-03-02", "2026-05-05", "2026-05-24", "2026-05-25", "2026-06-06", "2026-08-15", "2026-08-17", "2026-09-24", "2026-09-25", "2026-09-26", "2026-10-03", "2026-10-05", "2026-10-09", "2026-12-25"];
 
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // ✅ [추가] 데이터 변경 여부 확인 로직
+  // 현재 hours, target이 서버에서 가져온 원본(originalData)과 하나라도 다르면 true
+  const isDirty = JSON.stringify(originalData.hours) !== JSON.stringify(hours) || originalData.target !== target;
 
   const isHoliday = (d) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -71,29 +70,21 @@ export default function WorkLogApp() {
 
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
-  // ✅ [수정] 서버에서 데이터를 가져올 때, 빈 데이터면 기존 입력을 유지하거나 초기화하는 로직 보완
   const fetchFromServer = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
       const data = await res.json();
       
-      if (data && (data.target || (data.hours && Object.keys(data.hours).length > 0))) {
-        // 서버에 저장된 기록이 있는 경우에만 업데이트
-        setHours(data.hours || {});
-        setTarget(data.target || "");
-      } else {
-        // 서버에 기록이 전혀 없는 달(예: 아직 기록 안 한 4월)은 
-        // 굳이 기존에 사용자가 입력 중인 값을 덮어쓰지 않고 시간 목록만 비워줍니다.
-        setHours({});
-        // 만약 넘기자마자 타겟이 0이 되는 게 싫다면 아래 setTarget은 주석처리하거나 유지하세요.
-        // setTarget(""); 
-      }
-    } catch (e) { 
-      console.error("불러오기 실패:", e); 
-    } finally { 
-      setLoading(false); 
-    }
+      const serverHours = data.hours || {};
+      const serverTarget = data.target || "";
+
+      setHours(serverHours);
+      setTarget(serverTarget);
+      // ✅ [추가] 원본 데이터 보관
+      setOriginalData({ hours: serverHours, target: serverTarget });
+    } catch (e) { console.error("불러오기 실패:", e); }
+    finally { setLoading(false); }
   }, [monthKey]);
 
   useEffect(() => {
@@ -107,10 +98,9 @@ export default function WorkLogApp() {
   }, [isCurrentMonth, month]);
 
   const saveAll = async () => {
-    if (loading) return;
+    if (loading || !isDirty) return; // ✅ 수정사항 없으면 실행 안 함
     
     const finalTarget = target.trim() === "" ? "0:00" : target;
-
     setLoading(true);
     try {
       const filteredHours = {};
@@ -120,13 +110,7 @@ export default function WorkLogApp() {
         }
       });
       
-      const payload = { 
-        month: monthKey, 
-        target: finalTarget, 
-        hours: filteredHours 
-      };
-
-      console.log("보내는 데이터:", payload);
+      const payload = { month: monthKey, target: finalTarget, hours: filteredHours };
 
       await fetch(API_URL, {
         method: "POST",
@@ -135,21 +119,10 @@ export default function WorkLogApp() {
         body: JSON.stringify(payload)
       });
 
-      alert(`${month + 1}월 저장 요청을 보냈습니다.`);
-      // 저장 후 서버 데이터를 다시 불러와서 싱크를 맞춥니다.
-      setTimeout(() => fetchFromServer(), 1500);
-    } catch (e) { 
-      console.error("저장 에러:", e);
-      alert("저장 실패"); 
-    } finally { 
-      setLoading(false); 
-    }
-  };
-
-  const clearDate = (date) => {
-    const newHours = { ...hours };
-    delete newHours[String(date)];
-    setHours(newHours);
+      alert(`${month + 1}월 저장 완료!`);
+      setTimeout(() => fetchFromServer(), 1000);
+    } catch (e) { alert("저장 실패"); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -192,7 +165,7 @@ export default function WorkLogApp() {
                 {!holidayCheck ? (
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <input type="text" value={hourValue} onChange={e => setHours({ ...hours, [String(date)]: e.target.value })} style={{ width: "80px", height: "36px", textAlign: "right", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "0 10px", fontSize: "15px", outline: "none" }} placeholder={suggested} />
-                    {hourValue ? <button onClick={() => clearDate(date)} style={{ border: "none", background: "none", padding: "5px", cursor: "pointer", fontSize: "16px", opacity: 0.5 }}>🗑️</button> : <div style={{ width: "26px" }}></div>}
+                    {hourValue ? <button onClick={() => { const newH = {...hours}; delete newH[String(date)]; setHours(newH); }} style={{ border: "none", background: "none", padding: "5px", cursor: "pointer", fontSize: "16px", opacity: 0.5 }}>🗑️</button> : <div style={{ width: "26px" }}></div>}
                   </div>
                 ) : <span style={{ color:'#cbd5e1', fontSize:'14px', fontWeight:'bold', marginRight: "34px" }}>OFF</span>}
               </div>
@@ -203,7 +176,26 @@ export default function WorkLogApp() {
 
       <div style={{ position: "fixed", bottom: 0, left: 0, width: "100%", padding: "15px 20px", boxSizing: "border-box", display: "flex", gap: "12px", background: "white", borderTop: "1px solid #e2e8f0", zIndex: 1100 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", borderRadius: "15px", border: "1px solid #e2e8f0", background: "white", fontSize: "20px" }}>🔄</button>
-        <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", borderRadius: "15px", border: "none", background: "#1e293b", color: "white", fontSize: "17px", fontWeight: "bold" }}>{loading ? "처리 중..." : "저장하기"}</button>
+        
+        {/* ✅ [수정] 수정사항이 없을 때(isDirty가 false일 때) 버튼 비활성화 및 색상 변경 */}
+        <button 
+          onClick={saveAll} 
+          disabled={loading || !isDirty} 
+          style={{ 
+            flex: 1, 
+            height: "60px", 
+            borderRadius: "15px", 
+            border: "none", 
+            background: (loading || !isDirty) ? "#cbd5e1" : "#1e293b", 
+            color: (loading || !isDirty) ? "#94a3b8" : "white", 
+            fontSize: "17px", 
+            fontWeight: "bold",
+            cursor: (loading || !isDirty) ? "not-allowed" : "pointer",
+            transition: "all 0.3s ease"
+          }}
+        >
+          {loading ? "처리 중..." : (isDirty ? "저장하기" : "수정사항 없음")}
+        </button>
       </div>
     </div>
   );
