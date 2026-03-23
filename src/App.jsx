@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 // ✅ 최신 배포된 앱스크립트 URL을 여기에 붙여넣으세요.
-const API_URL = "https://script.google.com/macros/s/AKfycbwX_9Dj97SWPURBg6TRoj91dSiE9SzR872f5NL9-a8kFrqUyIvGsFFKxvWFCJwpKpJn/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyA5SoFYozvjhTbQoqIdqjKLdSae-IL0mosWMYe1mAFyGn_H1p4ET4R2FRlmdMB7G19/exec";
 
 export default function WorkLogApp() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -71,17 +71,29 @@ export default function WorkLogApp() {
 
   const suggested = diff > 0 && remainingWeekdays > 0 ? (diff / remainingWeekdays).toFixed(1) : "0";
 
+  // ✅ [수정] 서버에서 데이터를 가져올 때, 빈 데이터면 기존 입력을 유지하거나 초기화하는 로직 보완
   const fetchFromServer = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}?month=${monthKey}&t=${Date.now()}`);
       const data = await res.json();
-      if (data) {
+      
+      if (data && (data.target || (data.hours && Object.keys(data.hours).length > 0))) {
+        // 서버에 저장된 기록이 있는 경우에만 업데이트
         setHours(data.hours || {});
         setTarget(data.target || "");
+      } else {
+        // 서버에 기록이 전혀 없는 달(예: 아직 기록 안 한 4월)은 
+        // 굳이 기존에 사용자가 입력 중인 값을 덮어쓰지 않고 시간 목록만 비워줍니다.
+        setHours({});
+        // 만약 넘기자마자 타겟이 0이 되는 게 싫다면 아래 setTarget은 주석처리하거나 유지하세요.
+        // setTarget(""); 
       }
-    } catch (e) { console.error("불러오기 실패:", e); }
-    finally { setLoading(false); }
+    } catch (e) { 
+      console.error("불러오기 실패:", e); 
+    } finally { 
+      setLoading(false); 
+    }
   }, [monthKey]);
 
   useEffect(() => {
@@ -94,11 +106,9 @@ export default function WorkLogApp() {
     }
   }, [isCurrentMonth, month]);
 
-  // ✅ 요청하신 보완된 saveAll 로직 적용
   const saveAll = async () => {
     if (loading) return;
     
-    // 목표 시간이 비어있으면 0:00으로 기본값 설정
     const finalTarget = target.trim() === "" ? "0:00" : target;
 
     setLoading(true);
@@ -126,12 +136,14 @@ export default function WorkLogApp() {
       });
 
       alert(`${month + 1}월 저장 요청을 보냈습니다.`);
+      // 저장 후 서버 데이터를 다시 불러와서 싱크를 맞춥니다.
       setTimeout(() => fetchFromServer(), 1500);
     } catch (e) { 
       console.error("저장 에러:", e);
       alert("저장 실패"); 
+    } finally { 
+      setLoading(false); 
     }
-    finally { setLoading(false); }
   };
 
   const clearDate = (date) => {
@@ -142,7 +154,6 @@ export default function WorkLogApp() {
 
   return (
     <div style={{ width: "100%", minHeight: "100vh", backgroundColor: "#f8fafc", paddingBottom: "100px", fontFamily: "sans-serif", overflowX: "hidden" }}>
-      {/* 고정 헤더 */}
       <div style={{ position: "sticky", top: 0, zIndex: 1000, backgroundColor: "white", width: "100%", borderBottom: "1px solid #e2e8f0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px" }}>
           <button style={{border:'none', background:'none', fontSize:'20px', padding:'10px'}} onClick={() => { if (month === 0) { setYear(year - 1); setMonth(11); } else { setMonth(month - 1); } }}>◀</button>
@@ -155,7 +166,6 @@ export default function WorkLogApp() {
       </div>
 
       <div style={{ padding: "20px", boxSizing: "border-box" }}>
-        {/* 요약 카드 */}
         <div style={{ background: "linear-gradient(135deg, #2563eb, #1d4ed8)", padding: "25px", borderRadius: "24px", color: "white", marginBottom: "20px", boxShadow: "0 10px 15px -3px rgba(37,99,235,0.3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: "15px" }}>
             <span style={{fontWeight:'600'}}>목표 시간</span>
@@ -167,7 +177,6 @@ export default function WorkLogApp() {
           </div>
         </div>
 
-        {/* 리스트 */}
         <div style={{ background: "white", borderRadius: "20px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
           {dates.map(date => {
             const dayNum = new Date(year, month, date).getDay();
@@ -192,7 +201,6 @@ export default function WorkLogApp() {
         </div>
       </div>
 
-      {/* 하단 플로팅 버튼 */}
       <div style={{ position: "fixed", bottom: 0, left: 0, width: "100%", padding: "15px 20px", boxSizing: "border-box", display: "flex", gap: "12px", background: "white", borderTop: "1px solid #e2e8f0", zIndex: 1100 }}>
         <button onClick={fetchFromServer} disabled={loading} style={{ width: "60px", height: "60px", borderRadius: "15px", border: "1px solid #e2e8f0", background: "white", fontSize: "20px" }}>🔄</button>
         <button onClick={saveAll} disabled={loading} style={{ flex: 1, height: "60px", borderRadius: "15px", border: "none", background: "#1e293b", color: "white", fontSize: "17px", fontWeight: "bold" }}>{loading ? "처리 중..." : "저장하기"}</button>
