@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 // ✅ 최신 API URL을 여기에 넣으세요
-const API_URL = "https://script.google.com/macros/s/AKfycby3ozvriSAQjbOBEbFDTlgHow3ywj0bZwOUrxDApTeMNwFIRhmA9CdjbP_Yym9e31hQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxfsoGZ0785pgT6DEFQeTJKV_le1lF6UiBiyFT783GjKjqbxp0l9nOFnx3rg93njpH_/exec";
 
 export default function WorkLogApp() {
   const [year, setYear] = useState(new Date().getFullYear());
