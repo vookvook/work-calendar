@@ -3,7 +3,8 @@ import { Calculator, X, RotateCcw, Save, Trash2, Calendar, Clock, AlertCircle } 
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyA5SoFYozvjhTbQoqIdqjKLdSae-IL0mosWMYe1mAFyGn_H1p4ET4R2FRlmdMB7G19/exec";
 
-export default function WorkLogApp() {
+// 이 환경의 프리뷰 컴파일러 규칙에 맞추어 컴포넌트명을 App으로 수정했습니다.
+export default function App() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [hours, setHours] = useState({});
