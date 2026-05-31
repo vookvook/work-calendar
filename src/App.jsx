@@ -4,7 +4,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyA5SoFYozvjhTbQoqIdqjK
 
 // SVG 아이콘 직접 정의 (의존성 패키지 오류 방지 및 배포 가속화)
 const IconCalculator = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline">
     <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
     <line x1="9" y1="22" x2="9" y2="16"></line>
     <line x1="8" y1="6" x2="16" y2="6"></line>
@@ -20,8 +20,8 @@ const IconX = () => (
   </svg>
 );
 
-const IconRotate = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconRotate = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
   </svg>
 );
@@ -270,16 +270,16 @@ export default function App() {
         <div className="flex justify-between items-center px-4 py-3">
           <div className="flex items-center gap-1.5">
             <button 
-              className="text-slate-700 hover:bg-slate-100 active:scale-95 transition p-2 rounded-full border border-slate-200"
+              className="text-slate-700 hover:bg-slate-100 active:scale-95 transition-all p-2 rounded-full border border-slate-200 flex items-center justify-center w-8 h-8"
               onClick={() => { if (month === 0) { setYear(year - 1); setMonth(11); } else { setMonth(month - 1); } }}
             >
               ◀
             </button>
-            <span className="text-lg font-bold text-slate-800 tracking-tight min-w-[80px] text-center">
+            <span className="text-base font-bold text-slate-800 tracking-tight w-20 text-center">
               {year}. {month + 1}
             </span>
             <button 
-              className="text-slate-700 hover:bg-slate-100 active:scale-95 transition p-2 rounded-full border border-slate-200"
+              className="text-slate-700 hover:bg-slate-100 active:scale-95 transition-all p-2 rounded-full border border-slate-200 flex items-center justify-center w-8 h-8"
               onClick={() => { if (month === 11) { setYear(year + 1); setMonth(0); } else { setMonth(month + 1); } }}
             >
               ▶
@@ -289,7 +289,7 @@ export default function App() {
           {/* 계산기 진입 버튼 */}
           <button 
             onClick={() => setShowCalc(true)}
-            className="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 px-3.5 py-2 rounded-xl text-sm font-semibold border border-indigo-100 transition-all cursor-pointer"
+            className="flex items-center justify-center gap-1 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 px-3 py-1.5 rounded-xl text-xs font-semibold border border-indigo-100 transition-all cursor-pointer"
           >
             <IconCalculator />
             <span>1일 계산기</span>
@@ -375,7 +375,7 @@ export default function App() {
                     {hourValue ? (
                       <button 
                         onClick={() => { const newH = {...hours}; delete newH[String(date)]; setHours(newH); }} 
-                        className="text-slate-400 hover:text-rose-500 p-1.5 rounded-md hover:bg-slate-100 active:scale-95 transition"
+                        className="text-slate-400 hover:text-rose-500 p-1.5 rounded-md hover:bg-slate-100 active:scale-95 transition-all"
                       >
                         <IconTrash />
                       </button>
@@ -432,7 +432,7 @@ export default function App() {
               </div>
               <button 
                 onClick={() => setShowCalc(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-all"
               >
                 <IconX />
               </button>
@@ -534,7 +534,7 @@ export default function App() {
 
             <button 
               onClick={() => setShowCalc(false)}
-              className="mt-6 w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition active:scale-95"
+              className="mt-6 w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all active:scale-95"
             >
               닫기
             </button>
